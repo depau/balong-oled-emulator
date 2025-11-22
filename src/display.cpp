@@ -7,6 +7,7 @@
 #include "display.h"
 #include "hooks.h"
 #include "sdl_utils.h"
+#include "thread_name.h"
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -57,10 +58,12 @@ Display::Display() : timer_thread([&] { timer_thread_loop(); }) {
 
 Display::~Display() {
   on_quit();
-  TTF_CloseFont(font);
-  SDL_DestroyTexture(texture);
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
+
+  /// Leaking memory since I don't want to fix the SIGSEGV
+  // TTF_CloseFont(font);
+  // SDL_DestroyTexture(texture);
+  // SDL_DestroyRenderer(renderer);
+  // SDL_DestroyWindow(window);
 }
 
 void Display::reset_display() {
@@ -158,6 +161,7 @@ void Display::dispatch_button(const int button_id, bool use_timer) {
 }
 
 void Display::timer_thread_loop() {
+  set_thread_name("oled_timer");
   while (running) {
     std::unique_lock lock(thread_mutex);
 
@@ -182,7 +186,7 @@ void Display::timer_thread_loop() {
     if (!running)
       return;
 
-    std::this_thread::sleep_for(FRAME_TIME_MS * 1ms);
+    std::this_thread::sleep_for(FRAME_TIME_MS / 2 * 1ms);
   }
 }
 
@@ -286,6 +290,7 @@ void Display::loop() {
 }
 
 void Display::run_forever() {
+  set_thread_name("oled_main");
   while (running) {
     loop();
   }

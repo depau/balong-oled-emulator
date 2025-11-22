@@ -40,13 +40,20 @@ std::string find_sans_serif_font_path() {
   return path;
 }
 
-void convert_bgr565_to_rgb888(const std::span<uint16_t> &bgr565_buf,
-                              std::vector<uint32_t> &rgb888_buf,
-                              const int width,
-                              const int height) {
-  const int pixel_count = width * height;
-  for (int i = 0; i < pixel_count; ++i) {
-    uint16_t pixel = bgr565_buf[i];
+void convert_bw1bit_to_rgb888(const std::span<uint8_t> &bw1bit_buf, std::vector<uint32_t> &rgb888_buf) {
+  rgb888_buf.clear();
+  rgb888_buf.reserve(bw1bit_buf.size() * 8);
+  for (const auto pixel : bw1bit_buf) {
+    for (int i = 0; i < 8; ++i) {
+      rgb888_buf.push_back(pixel & (1 << i) ? 0x000000 : 0xFFFFFF);
+    }
+  }
+}
+
+void convert_bgr565_to_rgb888(const std::span<uint16_t> &bgr565_buf, std::vector<uint32_t> &rgb888_buf) {
+  rgb888_buf.clear();
+  rgb888_buf.reserve(bgr565_buf.size());
+  for (uint16_t pixel : bgr565_buf) {
     pixel = __bswap_16(pixel);
 
     const auto b5 = static_cast<uint8_t>(pixel & 0x1F);
@@ -59,7 +66,7 @@ void convert_bgr565_to_rgb888(const std::span<uint16_t> &bgr565_buf,
     const auto g = static_cast<uint8_t>((g6 * 255) / 63);
     const auto b = static_cast<uint8_t>((b5 * 255) / 31);
 
-    rgb888_buf[i] = (static_cast<uint32_t>(r) << 16) | (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(b);
+    rgb888_buf.push_back((static_cast<uint32_t>(r) << 16) | (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(b));
   }
 }
 

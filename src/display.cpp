@@ -77,7 +77,7 @@ void Display::reset_display() {
 
 void Display::paint_bgr565(const std::span<uint16_t> &buf) {
   std::vector<uint32_t> rgb888_buffer(LCD_WIDTH * LCD_HEIGHT);
-  convert_bgr565_to_rgb888(buf, rgb888_buffer, LCD_WIDTH, LCD_HEIGHT);
+  convert_bgr565_to_rgb888(buf, rgb888_buffer);
   paint_rgb888(rgb888_buffer);
 }
 

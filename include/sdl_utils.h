@@ -10,10 +10,10 @@ constexpr int pow2(const int number) {
 
 std::string find_sans_serif_font_path();
 
-void convert_bgr565_to_rgb888(const std::span<uint16_t> &bgr565_buf,
-                              std::vector<uint32_t> &rgb888_buf,
-                              int width,
-                              int height);
+void convert_bw1bit_to_rgb888(const std::span<uint8_t> &bw1bit_buf,
+                              std::vector<uint32_t> &rgb888_buf);
+
+void convert_bgr565_to_rgb888(const std::span<uint16_t> &bgr565_buf, std::vector<uint32_t> &rgb888_buf);
 
 void fill_gradient(std::vector<uint32_t> &rgb888_buf, uint32_t w, uint32_t h);
 

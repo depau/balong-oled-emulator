@@ -64,12 +64,12 @@ Display::~Display() {
 }
 
 void Display::reset_display() {
-  std::vector<uint16_t> bgr565_buffer(LCD_WIDTH * LCD_HEIGHT);
+  std::vector<uint32_t> rgb888_buffer(LCD_WIDTH * LCD_HEIGHT);
 
-  fill_gradient(bgr565_buffer, LCD_WIDTH, LCD_HEIGHT);
-  draw_text(bgr565_buffer, LCD_WIDTH, LCD_HEIGHT, "OLED HOME", font);
+  fill_gradient(rgb888_buffer, LCD_WIDTH, LCD_HEIGHT);
+  draw_text(rgb888_buffer, LCD_WIDTH, LCD_HEIGHT, "OLED HOME", font);
 
-  paint_bgr565(bgr565_buffer);
+  paint_rgb888(rgb888_buffer);
 }
 
 void Display::paint_bgr565(const std::span<uint16_t> &buf) {
@@ -124,7 +124,7 @@ bool Display::cancel_all() {
 }
 
 void Display::dispatch_button(const int button_id, bool use_timer) {
-  std::vector<uint16_t> bgr565_buffer(LCD_WIDTH * LCD_HEIGHT);
+  std::vector<uint32_t> rgb888_buf(LCD_WIDTH * LCD_HEIGHT);
 
   std::string text;
   switch (button_id) {
@@ -148,10 +148,10 @@ void Display::dispatch_button(const int button_id, bool use_timer) {
   }
 
   set_brightness(255);
-  fill_gradient(bgr565_buffer, LCD_WIDTH, LCD_HEIGHT);
-  draw_text(bgr565_buffer, LCD_WIDTH, LCD_HEIGHT, text, font);
+  fill_gradient(rgb888_buf, LCD_WIDTH, LCD_HEIGHT);
+  draw_text(rgb888_buf, LCD_WIDTH, LCD_HEIGHT, text, font);
 
-  paint_bgr565(bgr565_buffer);
+  paint_rgb888(rgb888_buf);
 
   if (use_timer)
     schedule([&] { reset_display(); }, 500, false);

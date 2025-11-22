@@ -46,10 +46,14 @@ void convert_bgr565_to_rgb888(const std::span<uint16_t> &bgr565_buf,
                               const int height) {
   const int pixel_count = width * height;
   for (int i = 0; i < pixel_count; ++i) {
-    const uint16_t pixel = bgr565_buf[i];
-    const auto r5 = static_cast<uint8_t>((pixel >> 11) & 0x1F);
-    const auto g6 = static_cast<uint8_t>((pixel >> 5) & 0x3F);
+    uint16_t pixel = bgr565_buf[i];
+    pixel = __bswap_16(pixel);
+
     const auto b5 = static_cast<uint8_t>(pixel & 0x1F);
+    pixel >>= 5;
+    const auto g6 = static_cast<uint8_t>(pixel & 0x3F);
+    pixel >>= 6;
+    const auto r5 = static_cast<uint8_t>(pixel & 0x1F);
 
     const auto r = static_cast<uint8_t>((r5 * 255) / 31);
     const auto g = static_cast<uint8_t>((g6 * 255) / 63);
@@ -59,22 +63,20 @@ void convert_bgr565_to_rgb888(const std::span<uint16_t> &bgr565_buf,
   }
 }
 
-void fill_gradient(std::vector<uint16_t> &bgr565_buf, uint32_t w, uint32_t h) {
+void fill_gradient(std::vector<uint32_t> &rgb888_buf, uint32_t w, uint32_t h) {
   for (uint32_t y = 0; y < h; ++y) {
     for (uint32_t x = 0; x < w; ++x) {
-      const auto r5 = static_cast<uint8_t>((x * (pow2(5) - 1)) / (w - 1));
-      const auto g6 = static_cast<uint8_t>((y * (pow2(6) - 1)) / (h - 1));
-      constexpr auto b5 = static_cast<uint8_t>(pow2(5) - 1);
-
-      const uint16_t rgb565 = (static_cast<uint16_t>(r5) << 11) | (static_cast<uint16_t>(g6) << 5) |
-                              static_cast<uint16_t>(b5);
-
-      bgr565_buf[y * w + x] = rgb565;
+      // Clamp the colors to simulate the limited color depth of the actual display
+      const uint8_t r = static_cast<uint8_t>(255 * x / w) & 0b11111000;
+      const uint8_t g = static_cast<uint8_t>(255 * y / h) & 0b11111100;
+      const uint8_t b = static_cast<uint8_t>(255 * (w - x) / w) & 0b11111000;
+      const auto rgb888 = static_cast<uint32_t>((r << 16) | (g << 8) | b);
+      rgb888_buf[y * w + x] = rgb888;
     }
   }
 }
 
-void draw_text(std::vector<uint16_t> &bgr565_buf,
+void draw_text(std::vector<uint32_t> &rgb888_buf,
                const uint32_t w,
                const uint32_t h,
                const std::string &text,
@@ -138,13 +140,8 @@ void draw_text(std::vector<uint16_t> &bgr565_buf,
         continue;
       }
 
-      const auto r5 = static_cast<uint16_t>(r >> 3);
-      const auto g6 = static_cast<uint16_t>(g >> 2);
-      const auto b5 = static_cast<uint16_t>(b >> 3);
-
-      const auto rgb565 = static_cast<uint16_t>((r5 << 11) | (g6 << 5) | b5);
-
-      bgr565_buf[screen_y * w + screen_x] = rgb565;
+      const uint32_t rgb888 = static_cast<uint32_t>((r << 16) | (g << 8) | b);
+      rgb888_buf[screen_y * w + screen_x] = rgb888;
     }
   }
 

@@ -47,8 +47,9 @@ public:
 
   uint32_t schedule(timer::callback_t &&callback, uint32_t interval, bool repeat);
   bool cancel(uint32_t timer_id);
+  bool cancel_all();
 
-  void dispatch_button(int button_id);
+  void dispatch_button(int button_id, bool use_timer = false);
 
   void loop();
   void run_forever();

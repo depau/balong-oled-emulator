@@ -42,7 +42,7 @@ int NOINLINE lcd_control_operate(int lcd_mode);
 int NOINLINE register_notify_handler(int subsystemid,
                                      void *notify_handler_sync,
                                      notify_handler_cb *notify_handler_async);
-int NOINLINE call_notify_handler(int subsystemid, int action, int subaction);
+int NOINLINE call_notify_handler(int subsystemid, int action);
 
 uint32_t NOINLINE osa_timer_create_ex(uint32_t time, uint32_t repeat, void (*callback)(), uint32_t _);
 uint32_t NOINLINE osa_timer_delete_ex(uint32_t timer_id);

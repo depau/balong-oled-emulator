@@ -117,7 +117,13 @@ bool Display::cancel(const uint32_t timer_id) {
   return false;
 }
 
-void Display::dispatch_button(const int button_id) {
+bool Display::cancel_all() {
+  std::scoped_lock lock(thread_mutex);
+  timers.clear();
+  return true;
+}
+
+void Display::dispatch_button(const int button_id, bool use_timer) {
   std::vector<uint16_t> bgr565_buffer(LCD_WIDTH * LCD_HEIGHT);
 
   std::string text;
@@ -147,7 +153,8 @@ void Display::dispatch_button(const int button_id) {
 
   paint_bgr565(bgr565_buffer);
 
-  schedule([&] { reset_display(); }, 500, false);
+  if (use_timer)
+    schedule([&] { reset_display(); }, 500, false);
 }
 
 void Display::timer_thread_loop() {
@@ -198,20 +205,20 @@ void Display::handle_keyevent(const SDL_Event &event) {
       const auto hold_time = duration_cast<milliseconds>(steady_clock::now() - button_down_time);
 
       if (hold_time >= LONG_HOLD_TIME && button_down == KEY_POWER) {
-        call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGLONGPOWER, 0);
+        call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGLONGPOWER);
 
       } else if (hold_time >= HOLD_TIME) {
         if (button_down == KEY_POWER) {
-          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGPOWER, 0);
+          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGPOWER);
         } else {
-          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGMENU, 0);
+          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGMENU);
         }
 
       } else {
         if (button_down == KEY_POWER) {
-          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_POWER, 0);
+          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_POWER);
         } else {
-          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_MENU, 0);
+          call_notify_handler(SUBSYSTEM_GPIO, BUTTON_MENU);
         }
       }
 
@@ -245,7 +252,6 @@ void Display::on_quit() {
 void Display::loop() {
   SDL_Event event;
   while (SDL_WaitEventTimeout(&event, FRAME_TIME_MS)) {
-    std::cout << "Event: " << event.type << std::endl;
     if (event.type == SDL_QUIT) {
       on_quit();
     } else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {

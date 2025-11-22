@@ -6,6 +6,8 @@
 #include "display.h"
 #include "hooks.h"
 
+static constexpr uint32_t UI_MENU_EXIT = 1006;
+
 std::unique_ptr<Display> display = nullptr;
 notify_handler_cb *hooked_notify_handler_async = nullptr;
 
@@ -17,9 +19,9 @@ Display &get_display() {
   return *display;
 }
 
-static int notify_handler(const int subsystemid, const int action, int) {
+static int notify_handler(const int subsystemid, const int action, int subaction) {
   assert(subsystemid == SUBSYSTEM_GPIO && "Unrecognised subsystem");
-  display->dispatch_button(action);
+  display->dispatch_button(action, subaction == 1);
   return 0;
 }
 
@@ -54,10 +56,10 @@ int register_notify_handler(int subsystemid, void *notify_handler_sync, notify_h
   return 0;
 }
 
-int call_notify_handler(const int subsystemid, const int action, int) {
+int call_notify_handler(const int subsystemid, const int action) {
   assert(subsystemid == SUBSYSTEM_GPIO && "Unrecognised subsystem");
   assert(hooked_notify_handler_async != nullptr);
-  return hooked_notify_handler_async(subsystemid, action, 0);
+  return hooked_notify_handler_async(subsystemid, action, 1);
 }
 
 uint32_t osa_timer_create_ex(const uint32_t time, const uint32_t repeat, void (*callback)(), uint32_t _) {
@@ -72,6 +74,15 @@ uint32_t osa_get_msgQ_id(const uint32_t queue_id) {
   return queue_id;
 }
 
-uint32_t osa_msgQex_send(uint32_t, uint32_t *, uint32_t, uint32_t) {
+uint32_t osa_msgQex_send(uint32_t queue, uint32_t *msg, uint32_t len, uint32_t) {
+  assert(len = 2 * sizeof(uint32_t));
+  if (msg[0] == UI_MENU_EXIT) {
+    std::cout << "Got UI_MENU_EXIT message" << std::endl;
+    display->cancel_all();
+    // Trigger callback to hijack
+    call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGPOWER);
+  } else {
+    std::cerr << "Got unknown message: " << msg[0] << '\n';
+  }
   return 0;
 }

@@ -30,8 +30,11 @@ void setup_hooks() {
 }
 
 void lcd_refresh_screen(const lcd_screen *screen) {
-  assert(screen->width == LCD_WIDTH && screen->height == LCD_HEIGHT);
-  display->paint_bgr565(std::span(screen->buf, (screen->buf_len) / sizeof(uint16_t)));
+  if (display->is_short_screen_mode()) {
+    display->paint_bw1bit(std::span(screen->buf, (screen->buf_len) / sizeof(uint16_t)));
+  } else {
+    display->paint_bgr565(std::span(screen->buf, (screen->buf_len) / sizeof(uint16_t)));
+  }
 }
 
 int lcd_control_operate(const int mode) {

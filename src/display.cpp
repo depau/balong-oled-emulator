@@ -70,7 +70,29 @@ void Display::reset_display() {
   std::vector<uint32_t> rgb888_buffer(LCD_WIDTH * LCD_HEIGHT);
 
   fill_gradient(rgb888_buffer, LCD_WIDTH, LCD_HEIGHT);
-  draw_text(rgb888_buffer, LCD_WIDTH, LCD_HEIGHT, "OLED HOME", font);
+  draw_text(rgb888_buffer, LCD_WIDTH, LCD_HEIGHT, is_short_screen_mode() ? "128x64 OLED" : "128x128 LCD", font);
+
+  paint_rgb888(rgb888_buffer);
+}
+
+void Display::paint_bw1bit(const std::span<uint16_t> &buf) {
+  std::vector<uint32_t> rgb888_short_buffer(LCD_WIDTH * lcd_height);
+  convert_bw1bit_to_rgb888(buf, rgb888_short_buffer);
+
+  // Center the drawn image into the larger buffer
+  std::vector<uint32_t> gradient(LCD_WIDTH * LCD_HEIGHT);
+  fill_gradient(gradient, LCD_WIDTH, lcd_height);
+
+  const ssize_t offset = LCD_HEIGHT / 2 - lcd_height / 2;
+
+  std::vector<uint32_t> rgb888_buffer;
+  rgb888_buffer.reserve(LCD_WIDTH * LCD_HEIGHT);
+
+  std::copy_n(gradient.begin(), offset * LCD_WIDTH, std::back_inserter(rgb888_buffer));
+  std::ranges::copy(rgb888_short_buffer, std::back_inserter(rgb888_buffer));
+  std::copy_n(gradient.begin(),
+              LCD_HEIGHT * LCD_HEIGHT - (offset + lcd_height) * LCD_WIDTH,
+              std::back_inserter(rgb888_buffer));
 
   paint_rgb888(rgb888_buffer);
 }
@@ -92,6 +114,36 @@ void Display::paint_rgb888(const std::span<uint32_t> &buf) {
     current_framebuffer = new_fb_num;
     repaint_pending = true;
   }
+}
+
+void Display::set_short_screen_mode(const bool enabled) {
+  if (enabled)
+    lcd_height = LCD_HEIGHT / 2;
+  else
+    lcd_height = LCD_HEIGHT;
+
+  // Call lcd_refresh_screen() (hooked) to notify the hijack lib
+  size_t fb_size = LCD_WIDTH * lcd_height;
+  if (enabled)
+    fb_size /= 8;
+  else
+    fb_size *= sizeof(uint16_t);
+
+  std::vector<uint16_t> fb(fb_size / sizeof(uint16_t));
+
+  const lcd_screen notification_screen{
+    .sx = 0,
+    .height = static_cast<uint32_t>(lcd_height),
+    .sy = 0,
+    .width = LCD_WIDTH,
+    .buf_len = static_cast<uint32_t>(fb_size),
+    .buf = fb.data(),
+  };
+
+  lcd_refresh_screen(&notification_screen);
+
+  // Schedule reset to clear out the black screen
+  schedule([&] { reset_display(); }, FRAME_TIME_MS, false);
 }
 
 void Display::set_brightness(const uint8_t value) {

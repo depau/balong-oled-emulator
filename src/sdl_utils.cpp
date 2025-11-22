@@ -40,12 +40,13 @@ std::string find_sans_serif_font_path() {
   return path;
 }
 
-void convert_bw1bit_to_rgb888(const std::span<uint8_t> &bw1bit_buf, std::vector<uint32_t> &rgb888_buf) {
+void convert_bw1bit_to_rgb888(const std::span<uint16_t> &bw1bit_buf, std::vector<uint32_t> &rgb888_buf) {
   rgb888_buf.clear();
   rgb888_buf.reserve(bw1bit_buf.size() * 8);
-  for (const auto pixel : bw1bit_buf) {
-    for (int i = 0; i < 8; ++i) {
-      rgb888_buf.push_back(pixel & (1 << i) ? 0x000000 : 0xFFFFFF);
+  for (auto pixel : bw1bit_buf) {
+    pixel = __bswap_16(pixel);
+    for (int i = 15; i >= 0; --i) {
+      rgb888_buf.push_back(pixel & (1 << i) ? 0xFFFFFF: 0x000000);
     }
   }
 }

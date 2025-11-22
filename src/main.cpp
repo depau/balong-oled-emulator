@@ -7,7 +7,16 @@
 #include "hooks.h"
 #include "sdl_utils.h"
 
-int main(int, char **) {
+int main(int argc, char *argv[]) {
+  bool is_short = false;
+
+  if (argc > 1 && std::string(argv[1]) == "--help") {
+    std::cout << "Usage: " << argv[0] << " --short\n";
+    return 0;
+  } else if (argc > 1 && std::string(argv[1]) == "--short") {
+    is_short = true;
+  }
+
   setup_hooks();
 
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -22,6 +31,7 @@ int main(int, char **) {
   }
 
   set_display(std::make_unique<Display>());
+  get_display().set_short_screen_mode(is_short);
   get_display().run_forever();
 
   TTF_Quit();

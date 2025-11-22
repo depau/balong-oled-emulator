@@ -1,0 +1,77 @@
+#include <cassert>
+#include <iostream>
+#include <memory>
+#include <utility>
+
+#include "display.h"
+#include "hooks.h"
+
+std::unique_ptr<Display> display = nullptr;
+notify_handler_cb *hooked_notify_handler_async = nullptr;
+
+void set_display(std::unique_ptr<Display> &&value) {
+  display = std::move(value);
+}
+
+Display &get_display() {
+  return *display;
+}
+
+static int notify_handler(const int subsystemid, const int action, int) {
+  assert(subsystemid == SUBSYSTEM_GPIO && "Unrecognised subsystem");
+  display->dispatch_button(action);
+  return 0;
+}
+
+void setup_hooks() {
+  register_notify_handler(SUBSYSTEM_GPIO, nullptr, notify_handler);
+}
+
+void lcd_refresh_screen(const lcd_screen *screen) {
+  assert(screen->width == LCD_WIDTH && screen->height == LCD_HEIGHT);
+  display->paint_bgr565(std::span(screen->buf, (screen->buf_len) / sizeof(uint16_t)));
+}
+
+int lcd_control_operate(const int mode) {
+  switch (mode) {
+  case LED_ON:
+    display->set_brightness(255);
+    break;
+  case LED_DIM:
+    display->set_brightness(128);
+    break;
+  case LED_SLEEP:
+    display->set_brightness(10);
+    break;
+  default:
+    std::cerr << "Unknown LCD control mode: " << mode << '\n';
+  }
+  return 0;
+}
+
+int register_notify_handler(int subsystemid, void *notify_handler_sync, notify_handler_cb *notify_handler_async) {
+  hooked_notify_handler_async = notify_handler_async;
+  return 0;
+}
+
+int call_notify_handler(const int subsystemid, const int action, int) {
+  assert(subsystemid == SUBSYSTEM_GPIO && "Unrecognised subsystem");
+  assert(hooked_notify_handler_async != nullptr);
+  return hooked_notify_handler_async(subsystemid, action, 0);
+}
+
+uint32_t osa_timer_create_ex(const uint32_t time, const uint32_t repeat, void (*callback)(), uint32_t _) {
+  return display->schedule(callback, static_cast<int>(time), repeat != 0);
+}
+
+uint32_t osa_timer_delete_ex(const uint32_t timer_id) {
+  return display->cancel(timer_id);
+}
+
+uint32_t osa_get_msgQ_id(const uint32_t queue_id) {
+  return queue_id;
+}
+
+uint32_t osa_msgQex_send(uint32_t, uint32_t *, uint32_t, uint32_t) {
+  return 0;
+}

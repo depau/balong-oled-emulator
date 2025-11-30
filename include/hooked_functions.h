@@ -18,7 +18,7 @@ constexpr int LED_ON = 100;
 constexpr int LED_DIM = 101;
 constexpr int LED_SLEEP = 102;
 
-using notify_handler_cb = int(int subsystemid, int action, int);
+using notify_handler_cb = int(int subsystemid, int action, int subaction);
 
 extern "C" {
   struct lcd_screen {

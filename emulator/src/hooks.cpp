@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "display.h"
+#include "hooked_functions.h"
 #include "hooks.h"
 
 static constexpr uint32_t UI_MENU_EXIT = 1006;

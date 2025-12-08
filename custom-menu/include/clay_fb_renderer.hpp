@@ -12,6 +12,8 @@
 
 #define bswap16(x) __builtin_bswap16(x)
 
+inline constexpr float BW_LUMINANCE_THRESHOLD = 0.4f;
+
 // ------------------------------------------------------------
 // Font types
 // ------------------------------------------------------------
@@ -487,7 +489,7 @@ public:
     const std::uint8_t gr = static_cast<std::uint8_t>(g6 << 2);
     const std::uint8_t rr = static_cast<std::uint8_t>(r5 << 3);
     const float lum = 0.2126f * rr + 0.7152f * gr + 0.0722f * br;
-    bool on = lum > 255.0f / 2;
+    bool on = lum > 255.0f * BW_LUMINANCE_THRESHOLD;
 
     const int pixelIndex = y * kWidth + x;
     const int wordIndex = pixelIndex / 16;

@@ -32,12 +32,13 @@ struct BitmapFont {
   std::int16_t lineGap;
 
   const Glyph *glyphs; // 128 entries, ASCII 0–127
-  const std::uint8_t *bitmap; // 1bpp, 8 pixels/byte, MSB leftmost
+  const std::uint8_t *bitmap; // 8bpp alpha
 
   [[nodiscard]] const Glyph &glyph(const std::uint32_t codepoint) const noexcept {
     const std::uint32_t idx = (codepoint < 128) ? codepoint : static_cast<std::uint32_t>('?');
     return glyphs[idx];
   }
+
 
   struct TextMetrics {
     std::int32_t width;
@@ -246,27 +247,24 @@ protected:
       int gy = cursorY - g.bearingY;
 
       if (g.width > 0 && g.height > 0) {
-        const std::size_t rowBytes = (g.width + 7) / 8;
         const std::uint8_t *bmpBase = font.bitmap + g.bitmapOffset;
 
         for (int yy = 0; yy < g.height; ++yy) {
           int py = gy + yy;
           if (py < effClip->y || py >= effClip->y + effClip->h)
             continue;
-          const std::uint8_t *row = bmpBase + static_cast<std::size_t>(yy) * rowBytes;
+          const std::uint8_t *row = bmpBase + static_cast<std::size_t>(yy) * g.width; // g.width is rowBytes for 8bpp
 
           for (int xx = 0; xx < g.width; ++xx) {
             int px = gx + xx;
             if (px < effClip->x || px >= effClip->x + effClip->w)
               continue;
 
-            std::size_t byteIdx = static_cast<std::size_t>(xx) / 8;
-            int bitIdx = 7 - (xx % 8);
-            bool on = (row[byteIdx] >> bitIdx) & 1u;
-            if (!on)
+            std::uint8_t alpha = row[xx];
+            if (alpha == 0)
               continue;
 
-            self().putPixel(px, py, color);
+            self().putPixel(px, py, color, alpha);
           }
         }
       }
@@ -397,11 +395,56 @@ public:
 
   ClayBGR565Renderer(std::uint16_t *fb, const font_registry_t &fonts) noexcept : Base(fb, fonts) {}
 
-  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) const {
+  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) {
     if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
       return;
     const int idx = y * kWidth + x;
     fb[idx] = bswap16(colorBgr565);
+  }
+
+  void putPixel(const int x, const int y, const std::uint16_t fgColor, std::uint8_t alpha) {
+    if (alpha == 0)
+      return;
+    if (alpha == 255) {
+      putPixel(x, y, fgColor);
+      return;
+    }
+
+    std::uint16_t bgColor = getPixel(x, y);
+
+    // Unpack foreground color (BGR565 to 8-bit RGB)
+    std::uint8_t f_r_5 = (fgColor >> 11) & 0x1F;
+    std::uint8_t f_g_6 = (fgColor >> 5) & 0x3F;
+    std::uint8_t f_b_5 = (fgColor >> 0) & 0x1F;
+
+    std::uint8_t f_r = (f_r_5 << 3) | (f_r_5 >> 2); // 5-bit to 8-bit
+    std::uint8_t f_g = (f_g_6 << 2) | (f_g_6 >> 4); // 6-bit to 8-bit
+    std::uint8_t f_b = (f_b_5 << 3) | (f_b_5 >> 2); // 5-bit to 8-bit
+
+    // Unpack background color (BGR565 to 8-bit RGB)
+    std::uint8_t b_r_5 = (bgColor >> 11) & 0x1F;
+    std::uint8_t b_g_6 = (bgColor >> 5) & 0x3F;
+    std::uint8_t b_b_5 = (bgColor >> 0) & 0x1F;
+
+    std::uint8_t b_r = (b_r_5 << 3) | (b_r_5 >> 2);
+    std::uint8_t b_g = (b_g_6 << 2) | (b_g_6 >> 4);
+    std::uint8_t b_b = (b_b_5 << 3) | (b_b_5 >> 2);
+
+    // Blend channels (alpha is 0-255)
+    std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
+    std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
+    std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
+
+    // Pack back to BGR565
+    std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
+    putPixel(x, y, outColor);
+  }
+
+  std::uint16_t getPixel(const int x, const int y) const {
+    if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
+      return 0; // Or some default transparent color
+    const int idx = y * kWidth + x;
+    return bswap16(fb[idx]);
   }
 
   void clear(const Clay_Color &c) { clearBgr565(pack_bgr565(c)); }
@@ -420,7 +463,19 @@ public:
 
   ClayBW1Renderer(std::uint16_t *fb, const font_registry_t &fonts) noexcept : Base(fb, fonts) {}
 
-  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) const {
+  bool getPixel(const int x, const int y) const {
+    if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
+      return false;
+
+    const int pixelIndex = y * kWidth + x;
+    const int wordIndex = pixelIndex / 16;
+    const int bitIndex = 15 - (pixelIndex % 16);
+
+    std::uint16_t word = bswap16(fb[wordIndex]);
+    return (word >> bitIndex) & 1u;
+  }
+
+  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) {
     if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
       return;
 
@@ -447,5 +502,42 @@ public:
     fb[wordIndex] = bswap16(word);
   }
 
+  void putPixel(const int x, const int y, const std::uint16_t fgColor, std::uint8_t alpha) {
+    if (alpha == 0)
+      return;
+    if (alpha == 255) {
+      putPixel(x, y, fgColor);
+      return;
+    }
+
+    bool bgIsOn = getPixel(x, y);
+
+    // Unpack foreground color (BGR565 to 8-bit RGB)
+    std::uint8_t f_r_5 = (fgColor >> 11) & 0x1F;
+    std::uint8_t f_g_6 = (fgColor >> 5) & 0x3F;
+    std::uint8_t f_b_5 = (fgColor >> 0) & 0x1F;
+
+    std::uint8_t f_r = (f_r_5 << 3) | (f_r_5 >> 2);
+    std::uint8_t f_g = (f_g_6 << 2) | (f_g_6 >> 4);
+    std::uint8_t f_b = (f_b_5 << 3) | (f_b_5 >> 2);
+
+    // Background is either black (0) or white (255)
+    std::uint8_t b_r = bgIsOn ? 255 : 0;
+    std::uint8_t b_g = bgIsOn ? 255 : 0;
+    std::uint8_t b_b = bgIsOn ? 255 : 0;
+
+    // Blend channels
+    std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
+    std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
+    std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
+
+    // Pack back to BGR565 for luminance calculation
+    std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
+    putPixel(x, y, outColor);
+  }
+
+
   void clear(const bool on = false) { clearMono(on); }
 };
+
+

@@ -7,25 +7,7 @@ from pathlib import Path
 from PIL import Image, ImageFont, ImageDraw
 
 
-def pack_bits(row_pixels):
-    """
-    row_pixels: iterable of 0/1 values
-    returns bytes where MSB is leftmost pixel in each byte
-    """
-    out = []
-    bits = 0
-    count = 0
-    for v in row_pixels:
-        bits = (bits << 1) | (1 if v else 0)
-        count += 1
-        if count == 8:
-            out.append(bits)
-            bits = 0
-            count = 0
-    if count:
-        bits <<= (8 - count)
-        out.append(bits)
-    return bytes(out)
+
 
 
 def main():
@@ -76,14 +58,12 @@ def main():
         mask = font.getmask(ch, mode="L", anchor="ls")
         gw, gh = mask.size
 
-        # Convert mask to binary row-major
+        # Convert mask to 8-bit alpha row-major
         bmp = bytearray()
         for y in range(gh):
-            row = []
             for x in range(gw):
                 v = mask.getpixel((x, y))  # mask-local coords
-                row.append(1 if v >= 128 else 0)
-            bmp.extend(pack_bits(row))
+                bmp.append(v)
 
         adv = int(round(font.getlength(ch)))
         return {
@@ -134,7 +114,7 @@ def main():
         f.write(f"namespace fonts {{\n\n")
 
         # Bitmap array
-        f.write(f"inline constexpr std::uint8_t {var_base}_bitmap[] = {{\n")
+        f.write(f"inline constexpr std::uint8_t {var_base}_bitmap[] = {{ // 8bpp alpha\n")
         line = "    "
         for i, b in enumerate(bitmap_bytes):
             token = f"{b}, "

@@ -244,6 +244,14 @@ void Display::timer_thread_loop() {
 }
 
 void Display::handle_keyevent(const SDL_Event &event) {
+  if (event.type == SDL_KEYDOWN) {
+    if (event.key.keysym.sym >= SDLK_1 && event.key.keysym.sym <= SDLK_9) {
+      const int num = event.key.keysym.sym - SDLK_0;
+      SDL_SetWindowSize(window, LCD_WIDTH * num, LCD_HEIGHT * num);
+      return;
+    }
+  }
+
   const auto keycode = event.key.keysym.sym;
 
   if (keycode != KEY_POWER && keycode != KEY_MENU)

@@ -41,7 +41,6 @@ struct BitmapFont {
     return glyphs[idx];
   }
 
-
   struct TextMetrics {
     std::int32_t width;
     std::int32_t height;
@@ -245,8 +244,8 @@ protected:
 
       const Glyph &g = font.glyph(static_cast<std::uint8_t>(ch));
 
-      int gx = cursorX + g.bearingX;
-      int gy = cursorY - g.bearingY;
+      const int gx = cursorX + g.bearingX;
+      const int gy = cursorY - g.bearingY;
 
       if (g.width > 0 && g.height > 0) {
         const std::uint8_t *bmpBase = font.bitmap + g.bitmapOffset;
@@ -394,17 +393,16 @@ public:
 
   using Base = ClayRendererBase<ClayBGR565Renderer>;
 
-
   ClayBGR565Renderer(std::uint16_t *fb, const font_registry_t &fonts) noexcept : Base(fb, fonts) {}
 
-  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) {
+  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) const {
     if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
       return;
     const int idx = y * kWidth + x;
     fb[idx] = bswap16(colorBgr565);
   }
 
-  void putPixel(const int x, const int y, const std::uint16_t fgColor, std::uint8_t alpha) {
+  void putPixel(const int x, const int y, const std::uint16_t fgColor, std::uint8_t alpha) const {
     if (alpha == 0)
       return;
     if (alpha == 255) {
@@ -412,33 +410,33 @@ public:
       return;
     }
 
-    std::uint16_t bgColor = getPixel(x, y);
+    const std::uint16_t bgColor = getPixel(x, y);
 
     // Unpack foreground color (BGR565 to 8-bit RGB)
-    std::uint8_t f_r_5 = (fgColor >> 11) & 0x1F;
-    std::uint8_t f_g_6 = (fgColor >> 5) & 0x3F;
-    std::uint8_t f_b_5 = (fgColor >> 0) & 0x1F;
+    const std::uint8_t f_r_5 = (fgColor >> 11) & 0x1F;
+    const std::uint8_t f_g_6 = (fgColor >> 5) & 0x3F;
+    const std::uint8_t f_b_5 = (fgColor >> 0) & 0x1F;
 
-    std::uint8_t f_r = (f_r_5 << 3) | (f_r_5 >> 2); // 5-bit to 8-bit
-    std::uint8_t f_g = (f_g_6 << 2) | (f_g_6 >> 4); // 6-bit to 8-bit
-    std::uint8_t f_b = (f_b_5 << 3) | (f_b_5 >> 2); // 5-bit to 8-bit
+    const std::uint8_t f_r = (f_r_5 << 3) | (f_r_5 >> 2); // 5-bit to 8-bit
+    const std::uint8_t f_g = (f_g_6 << 2) | (f_g_6 >> 4); // 6-bit to 8-bit
+    const std::uint8_t f_b = (f_b_5 << 3) | (f_b_5 >> 2); // 5-bit to 8-bit
 
     // Unpack background color (BGR565 to 8-bit RGB)
-    std::uint8_t b_r_5 = (bgColor >> 11) & 0x1F;
-    std::uint8_t b_g_6 = (bgColor >> 5) & 0x3F;
-    std::uint8_t b_b_5 = (bgColor >> 0) & 0x1F;
+    const std::uint8_t b_r_5 = (bgColor >> 11) & 0x1F;
+    const std::uint8_t b_g_6 = (bgColor >> 5) & 0x3F;
+    const std::uint8_t b_b_5 = (bgColor >> 0) & 0x1F;
 
-    std::uint8_t b_r = (b_r_5 << 3) | (b_r_5 >> 2);
-    std::uint8_t b_g = (b_g_6 << 2) | (b_g_6 >> 4);
-    std::uint8_t b_b = (b_b_5 << 3) | (b_b_5 >> 2);
+    const std::uint8_t b_r = (b_r_5 << 3) | (b_r_5 >> 2);
+    const std::uint8_t b_g = (b_g_6 << 2) | (b_g_6 >> 4);
+    const std::uint8_t b_b = (b_b_5 << 3) | (b_b_5 >> 2);
 
     // Blend channels (alpha is 0-255)
-    std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
-    std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
-    std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
+    const std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
+    const std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
+    const std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
 
     // Pack back to BGR565
-    std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
+    const std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
     putPixel(x, y, outColor);
   }
 
@@ -473,11 +471,11 @@ public:
     const int wordIndex = pixelIndex / 16;
     const int bitIndex = 15 - (pixelIndex % 16);
 
-    std::uint16_t word = bswap16(fb[wordIndex]);
+    const std::uint16_t word = bswap16(fb[wordIndex]);
     return (word >> bitIndex) & 1u;
   }
 
-  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) {
+  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) const {
     if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
       return;
 
@@ -489,7 +487,7 @@ public:
     const std::uint8_t gr = static_cast<std::uint8_t>(g6 << 2);
     const std::uint8_t rr = static_cast<std::uint8_t>(r5 << 3);
     const float lum = 0.2126f * rr + 0.7152f * gr + 0.0722f * br;
-    bool on = lum > 255.0f * BW_LUMINANCE_THRESHOLD;
+    const bool on = lum > 255.0f * BW_LUMINANCE_THRESHOLD;
 
     const int pixelIndex = y * kWidth + x;
     const int wordIndex = pixelIndex / 16;
@@ -504,7 +502,7 @@ public:
     fb[wordIndex] = bswap16(word);
   }
 
-  void putPixel(const int x, const int y, const std::uint16_t fgColor, std::uint8_t alpha) {
+  void putPixel(const int x, const int y, const std::uint16_t fgColor, std::uint8_t alpha) const {
     if (alpha == 0)
       return;
     if (alpha == 255) {
@@ -515,31 +513,28 @@ public:
     bool bgIsOn = getPixel(x, y);
 
     // Unpack foreground color (BGR565 to 8-bit RGB)
-    std::uint8_t f_r_5 = (fgColor >> 11) & 0x1F;
-    std::uint8_t f_g_6 = (fgColor >> 5) & 0x3F;
-    std::uint8_t f_b_5 = (fgColor >> 0) & 0x1F;
+    const std::uint8_t f_r_5 = (fgColor >> 11) & 0x1F;
+    const std::uint8_t f_g_6 = (fgColor >> 5) & 0x3F;
+    const std::uint8_t f_b_5 = (fgColor >> 0) & 0x1F;
 
-    std::uint8_t f_r = (f_r_5 << 3) | (f_r_5 >> 2);
-    std::uint8_t f_g = (f_g_6 << 2) | (f_g_6 >> 4);
-    std::uint8_t f_b = (f_b_5 << 3) | (f_b_5 >> 2);
+    const std::uint8_t f_r = (f_r_5 << 3) | (f_r_5 >> 2);
+    const std::uint8_t f_g = (f_g_6 << 2) | (f_g_6 >> 4);
+    const std::uint8_t f_b = (f_b_5 << 3) | (f_b_5 >> 2);
 
-    // Background is either black (0) or white (255)
-    std::uint8_t b_r = bgIsOn ? 255 : 0;
-    std::uint8_t b_g = bgIsOn ? 255 : 0;
-    std::uint8_t b_b = bgIsOn ? 255 : 0;
+    // The background is either black (0) or white (255)
+    const std::uint8_t b_r = bgIsOn ? 255 : 0;
+    const std::uint8_t b_g = bgIsOn ? 255 : 0;
+    const std::uint8_t b_b = bgIsOn ? 255 : 0;
 
     // Blend channels
-    std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
-    std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
-    std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
+    const std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
+    const std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
+    const std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
 
     // Pack back to BGR565 for luminance calculation
-    std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
+    const std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
     putPixel(x, y, outColor);
   }
 
-
   void clear(const bool on = false) { clearMono(on); }
 };
-
-

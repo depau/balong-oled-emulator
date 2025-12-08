@@ -149,10 +149,6 @@ public:
     return fonts[fontId];
   }
 
-  // Derived must implement:
-  //   static constexpr int kWidth, kHeight;
-  //   void putPixel(int x, int y, std::uint16_t colorBgr565, bool monoOn);
-
   void clearBgr565(const std::uint16_t colorBgr565) {
     static_assert(Derived::kWidth > 0 && Derived::kHeight > 0);
     const std::size_t n = static_cast<std::size_t>(Derived::kWidth) * static_cast<std::size_t>(Derived::kHeight);
@@ -185,7 +181,7 @@ protected:
 
     for (int y = tmp.y; y < tmp.y + tmp.h; ++y) {
       for (int x = tmp.x; x < tmp.x + tmp.w; ++x) {
-        self().putPixel(x, y, colorBgr565, monoOn);
+        self().putPixel(x, y, colorBgr565);
       }
     }
   }
@@ -270,7 +266,7 @@ protected:
             if (!on)
               continue;
 
-            self().putPixel(px, py, color, true);
+            self().putPixel(px, py, color);
           }
         }
       }
@@ -398,9 +394,10 @@ public:
 
   using Base = ClayRendererBase<ClayBGR565Renderer>;
 
+
   ClayBGR565Renderer(std::uint16_t *fb, const font_registry_t &fonts) noexcept : Base(fb, fonts) {}
 
-  void putPixel(const int x, const int y, const std::uint16_t colorBgr565, bool /*monoOn*/) const {
+  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) const {
     if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
       return;
     const int idx = y * kWidth + x;
@@ -423,23 +420,19 @@ public:
 
   ClayBW1Renderer(std::uint16_t *fb, const font_registry_t &fonts) noexcept : Base(fb, fonts) {}
 
-  void putPixel(const int x, const int y, const std::uint16_t colorBgr565, const bool monoOn) const {
+  void putPixel(const int x, const int y, const std::uint16_t colorBgr565) const {
     if (x < 0 || y < 0 || x >= kWidth || y >= kHeight)
       return;
 
-    // Simple rule: off if monoOn == false or color is “very dark”
-    bool on = monoOn;
-    if (on) {
-      // unpack BGR565 -> luminance threshold
-      const std::uint8_t b5 = static_cast<std::uint8_t>((colorBgr565 >> 11) & 0x1F);
-      const std::uint8_t g6 = static_cast<std::uint8_t>((colorBgr565 >> 5) & 0x3F);
-      const std::uint8_t r5 = static_cast<std::uint8_t>(colorBgr565 & 0x1F);
-      const std::uint8_t br = static_cast<std::uint8_t>(b5 << 3);
-      const std::uint8_t gr = static_cast<std::uint8_t>(g6 << 2);
-      const std::uint8_t rr = static_cast<std::uint8_t>(r5 << 3);
-      const float lum = 0.2126f * rr + 0.7152f * gr + 0.0722f * br;
-      on = lum > 64.0f;
-    }
+    // Convert color to luminance to decide on/off
+    const std::uint8_t b5 = static_cast<std::uint8_t>((colorBgr565 >> 11) & 0x1F);
+    const std::uint8_t g6 = static_cast<std::uint8_t>((colorBgr565 >> 5) & 0x3F);
+    const std::uint8_t r5 = static_cast<std::uint8_t>(colorBgr565 & 0x1F);
+    const std::uint8_t br = static_cast<std::uint8_t>(b5 << 3);
+    const std::uint8_t gr = static_cast<std::uint8_t>(g6 << 2);
+    const std::uint8_t rr = static_cast<std::uint8_t>(r5 << 3);
+    const float lum = 0.2126f * rr + 0.7152f * gr + 0.0722f * br;
+    bool on = lum > 255.0f / 2;
 
     const int pixelIndex = y * kWidth + x;
     const int wordIndex = pixelIndex / 16;

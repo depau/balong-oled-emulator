@@ -7,8 +7,6 @@
 #include "hooked_functions.h"
 #include "hooks.h"
 
-static constexpr uint32_t UI_MENU_EXIT = 1006;
-
 std::unique_ptr<Display> display = nullptr;
 notify_handler_cb *hooked_notify_handler_async = nullptr;
 

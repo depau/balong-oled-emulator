@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+#define UNUSED(x) (void)(x)
 #define NOINLINE __attribute__((noinline))
 
 constexpr int LCD_WIDTH = 128;
@@ -17,6 +18,8 @@ constexpr int BUTTON_LONGMENU = 15;
 constexpr int LED_ON = 100;
 constexpr int LED_DIM = 101;
 constexpr int LED_SLEEP = 102;
+
+constexpr uint32_t UI_MENU_EXIT = 1006;
 
 using notify_handler_cb = int(int subsystemid, int action, int subaction);
 

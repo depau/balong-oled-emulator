@@ -1,14 +1,25 @@
 #pragma once
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
+#include <optional>
+#include <span>
+#include <string>
+#include <vector>
 
 #include "clay.hpp"
 #include "clay_fb_renderer.hpp"
+#include "clay_utils.hpp"
 #include "fonts/poppins_12.hpp"
 #include "hooked_functions.h"
+#include "plugins/plugin_api.hpp"
+
+DECLARE_FN_TYPE(plugin_register_fn_t, plugin_descriptor_t *, plugin_api_t controller_api, void **userptr);
 
 class display_controller {
+  using plugin_loader_desc_t = std::pair<plugin_loader_callback_fn_t, void *>;
+
   uint16_t secret_screen_buf[LCD_WIDTH * LCD_HEIGHT]{};
   lcd_screen secret_screen{ .sx = 1,
                             .height = 128,
@@ -30,6 +41,9 @@ class display_controller {
                                   },
                                    nullptr };
 
+  std::vector<plugin_descriptor> plugins;
+  std::map<std::string, plugin_loader_desc_t> plugin_loaders;
+
   bool is_small_screen_mode = false;
   bool is_active = false;
 
@@ -37,6 +51,7 @@ public:
   display_controller();
 
   // ReSharper disable once CppMemberFunctionMayBeStatic
+  // NOLINTNEXTLINE(*-convert-member-functions-to-static)
   [[nodiscard]] uint8_t width() const { return LCD_WIDTH; }
   [[nodiscard]] uint8_t height() const { return is_small_screen_mode ? LCD_HEIGHT / 2 : LCD_HEIGHT; }
   [[nodiscard]] bool active() const { return is_active; }
@@ -55,6 +70,24 @@ public:
       renderer.render(cmds);
     }
     lcd_refresh_screen(&secret_screen);
+  }
+
+  void draw_frame(const std::span<const uint16_t> &buf) {
+    std::ranges::copy(buf, secret_screen_buf);
+    lcd_refresh_screen(&secret_screen);
+  }
+
+  void draw_frame(const std::span<uint16_t> &buf) {
+    return draw_frame(static_cast<const std::span<const uint16_t>>(buf));
+  }
+
+  [[nodiscard]] std::optional<uint16_t> get_font(const std::string &fontName, int fontSize) const {
+    for (uint16_t i = 0; i < font_registry.size(); ++i) {
+      const auto &font = font_registry[i];
+      if (font->name == fontName && font->size == fontSize)
+        return i;
+    }
+    return std::nullopt;
   }
 
   void set_active(const bool active) { is_active = active; }

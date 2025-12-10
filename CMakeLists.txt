@@ -41,6 +41,9 @@ add_library(balong_custom_menu SHARED
         custom-menu/src/main.cpp
         custom-menu/src/display_controller.cpp
         custom-menu/src/clay.c
+        custom-menu/src/plugin_api.cpp
+        custom-menu/src/main_menu.cpp
+        custom-menu/src/main_menu.hpp
 )
 target_include_directories(balong_custom_menu PRIVATE
         include

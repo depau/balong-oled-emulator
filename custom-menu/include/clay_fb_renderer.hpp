@@ -28,6 +28,8 @@ struct Glyph {
 };
 
 struct BitmapFont {
+  const char *name;
+
   std::uint16_t size;
   std::int16_t ascent;
   std::int16_t descent; // negative

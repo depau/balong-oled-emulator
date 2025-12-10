@@ -393,7 +393,8 @@ inline constexpr Glyph Poppins_12_glyphs[128] = {
   /* □ */ { 6, 9, 0, 9, 6, 0 },
 };
 
-inline constexpr BitmapFont Poppins_12 = { 12, // size
+inline constexpr BitmapFont Poppins_12 = { "Poppins", // font name
+                                           12, // size
                                            13, // ascent
                                            -5, // descent (negative)
                                            2, // lineGap

@@ -7,9 +7,6 @@ from pathlib import Path
 from PIL import Image, ImageFont, ImageDraw
 
 
-
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("font", type=Path, help="TTF/OTF font file")
@@ -138,10 +135,11 @@ def main():
 
         # Font instance
         f.write(f"inline constexpr BitmapFont {var_base} = {{\n")
+        f.write(f"    \"{args.name}\", // font name\n")
         f.write(f"    {args.size}, // size\n")
-        f.write(f"    {ascent},    // ascent\n")
-        f.write(f"    -{descent},  // descent (negative)\n")
-        f.write(f"    {line_gap},  // lineGap\n")
+        f.write(f"    {ascent}, // ascent\n")
+        f.write(f"    -{descent}, // descent (negative)\n")
+        f.write(f"    {line_gap}, // lineGap\n")
         f.write(f"    {var_base}_glyphs,\n")
         f.write(f"    {var_base}_bitmap\n")
         f.write("};\n\n")

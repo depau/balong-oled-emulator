@@ -1,11 +1,11 @@
 #include "display_controller.hpp"
 #include "plugins/plugin_api.hpp"
 
-display_controller &get_display_controller(const plugin_api_t controller_api) {
+static display_controller &get_display_controller(const plugin_api_t controller_api) {
   return *reinterpret_cast<display_controller *>(controller_api);
 }
 
-const display_controller &get_display_controller(const c_plugin_api_t controller_api) {
+static const display_controller &get_display_controller(const c_plugin_api_t controller_api) {
   return *reinterpret_cast<const display_controller *>(controller_api);
 }
 
@@ -38,5 +38,9 @@ void plugin_api_draw_frame(const plugin_api_t controller_api, const uint16_t *bu
 }
 
 void plugin_api_goto_main_menu(plugin_api_t controller_api) {
+  // TODO implement
+}
+
+void plugin_api_fatal_error(plugin_api_t controller_api, const char *message, bool unload_plugin) {
   // TODO implement
 }

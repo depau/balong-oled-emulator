@@ -117,7 +117,9 @@ DECLARE_FN_TYPE(plugin_setup_fn_t, void *, plugin_api_t controller_api);
 /**
  * Declare a plug-in.
  *
- * C/C++ plug-ins must use this macro to declare their plug-in.
+ * C plug-ins must use this macro to declare their plug-in.
+ *
+ * @snippet _plugin_example_snippet.c Demonstration of a C plug-in using DECLARE_PLUGIN
  *
  * @param _plugin_name The name of the plug-in
  * @param _setup_fn The setup function

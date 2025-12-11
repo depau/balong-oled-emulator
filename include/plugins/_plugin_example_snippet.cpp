@@ -1,5 +1,4 @@
-#include "plugin_api.hpp"
-#include "plugins/plugin_api.h"
+#include "plugins/plugin_api.hpp"
 
 class my_plugin {
 public:

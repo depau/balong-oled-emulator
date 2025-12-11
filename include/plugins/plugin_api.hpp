@@ -198,7 +198,7 @@ consteval plugin_on_keypress_fn_t get_on_keypress_ptr() {
 /**
  * Declare a C++ plug-in.
  *
- * @snippet _plugin_example_snippet.cpp Demonstration of DECLARE_CPP_PLUGIN usage
+ * @snippet _plugin_example_snippet.cpp Demonstration of a C++ plug-in using DECLARE_CPP_PLUGIN
  *
  * @param _name The name of the plug-in
  * @param _class The plug-in class name

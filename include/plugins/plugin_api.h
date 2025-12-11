@@ -127,7 +127,7 @@ DECLARE_FN_TYPE(plugin_setup_fn_t, void *, plugin_api_t controller_api);
  * @param _on_keypress Optional keypress callback
  */
 #define DECLARE_PLUGIN(_plugin_name, _setup_fn, _teardown_fn, ...) \
-  DECLARE_PLUGIN(register_plugin, plugin_descriptor, _plugin_name, _setup_fn, _teardown_fn, __VA_ARGS__)
+  _DECLARE_PLUGIN_INTERNAL(register_plugin, plugin_descriptor, _plugin_name, _setup_fn, _teardown_fn, __VA_ARGS__)
 
 /**
  * Plug-in loader callback type

@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#include "clay.h"
+struct Clay_RenderCommandArray;
 
 typedef struct display_controller_api *plugin_api_t;
 typedef const struct display_controller_api *c_plugin_api_t;

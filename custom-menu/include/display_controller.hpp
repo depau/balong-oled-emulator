@@ -11,7 +11,6 @@
 #include "apps/app_api.hpp"
 #include "clay.hpp"
 #include "clay_fb_renderer.hpp"
-#include "clay_utils.hpp"
 #include "fonts/poppins_12.hpp"
 #include "hooked_functions.h"
 

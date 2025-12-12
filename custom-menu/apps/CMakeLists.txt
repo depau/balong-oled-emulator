@@ -13,8 +13,11 @@ function(custom_menu_add_app order target)
     target_include_directories(${target} PRIVATE
             "${COMMON_INCLUDE_DIR}"
             "${CMAKE_CURRENT_SOURCE_DIR}/${target}/include"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../vendor"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../ui/vendor"
+            "${CMAKE_CURRENT_SOURCE_DIR}/../ui/include"
     )
+
+    target_link_libraries(${target} PRIVATE ui)
 
     set_target_properties(${target} PROPERTIES
             PREFIX ""

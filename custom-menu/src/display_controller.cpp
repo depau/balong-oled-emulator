@@ -120,15 +120,15 @@ void display_controller::set_active_app(std::optional<size_t> app_index) {
   if (app_index == active_app_index)
     return;
   if (active_app_index.has_value()) {
-    if (auto &[descriptor, userptr] = apps[active_app_index.value()]; descriptor.on_blur) {
-      descriptor.on_blur(userptr, this);
+    if (auto &[descriptor, userptr] = apps[active_app_index.value()]; descriptor.on_leave) {
+      descriptor.on_leave(userptr, this);
     }
   }
   active_app_index = app_index;
   if (active_app_index.has_value()) {
     auto &[descriptor, userptr] = apps[active_app_index.value()];
-    assert(descriptor.on_focus != nullptr && "Active app must have on_focus callback");
-    descriptor.on_focus(userptr, this);
+    assert(descriptor.on_enter != nullptr && "Active app must have on_enter callback");
+    descriptor.on_enter(userptr, this);
   }
 }
 

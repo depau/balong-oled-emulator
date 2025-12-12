@@ -76,7 +76,7 @@ DECLARE_FN_TYPE(app_on_keypress_fn_t, void, void *userptr, app_api_t controller_
  * @param userptr The user pointer returned by the setup function
  * @param controller_api The controller API object
  */
-DECLARE_FN_TYPE(app_on_focus_fn_t, void, void *userptr, app_api_t controller_api);
+DECLARE_FN_TYPE(app_on_enter_fn_t, void, void *userptr, app_api_t controller_api);
 
 /**
  * Handle app blur event
@@ -87,13 +87,13 @@ DECLARE_FN_TYPE(app_on_focus_fn_t, void, void *userptr, app_api_t controller_api
  * @param userptr The user pointer returned by the setup function
  * @param controller_api The controller API object
  */
-DECLARE_FN_TYPE(app_on_blur_fn_t, void, void *userptr, app_api_t controller_api);
+DECLARE_FN_TYPE(app_on_leave_fn_t, void, void *userptr, app_api_t controller_api);
 
 typedef struct app_descriptor {
   const char *name;
   app_teardown_fn_t on_teardown;
-  app_on_focus_fn_t on_focus;
-  app_on_blur_fn_t on_blur;
+  app_on_enter_fn_t on_enter;
+  app_on_leave_fn_t on_leave;
   app_on_keypress_fn_t on_keypress;
 } app_descriptor_t;
 
@@ -131,8 +131,8 @@ DECLARE_FN_TYPE(app_setup_fn_t, void *, app_api_t controller_api);
  * @param _app_name The name of the app
  * @param _setup_fn The setup function
  * @param _teardown_fn The teardown function
- * @param _on_focus Optional focus callback
- * @param _on_blur Optional blur callback
+ * @param _on_enter Optional focus callback
+ * @param _on_leave Optional blur callback
  * @param _on_keypress Optional keypress callback
  */
 #define DECLARE_APP(_app_name, _setup_fn, _teardown_fn, ...) \
@@ -209,7 +209,7 @@ void app_api_clay_render(app_api_t controller_api, const Clay_RenderCommandArray
 void app_api_draw_frame(app_api_t controller_api, const uint16_t *buf, size_t buf_size);
 
 /**
- * Return to the main menu, leaving the current app. `on_blur` will be called before returning.
+ * Return to the main menu, leaving the current app. `on_leave` will be called before returning.
  *
  * @param controller_api The controller API object
  */
@@ -218,7 +218,7 @@ void app_api_goto_main_menu(app_api_t controller_api);
 /**
  * Report a fatal error to the controller.
  *
- * Renders an error message to the UI and exits the app, calling `on_blur`. If `unload_app` is true, the app
+ * Renders an error message to the UI and exits the app, calling `on_leave`. If `unload_app` is true, the app
  * will be unloaded after reporting the error, calling its `on_teardown` function, and removing it from the list of
  * loaded apps.
  *

@@ -64,14 +64,14 @@ struct display_controller_api {
   void draw_frame(const std::span<const uint16_t> &buf) { app_api_draw_frame(this, buf.data(), buf.size()); }
 
   /**
-   * Return to the main menu, leaving the current app. `on_blur` will be called before returning.
+   * Return to the main menu, leaving the current app. `on_leave` will be called before returning.
    */
   void goto_main_menu() { app_api_goto_main_menu(this); }
 
   /**
    * Report a fatal error to the controller.
    *
-   * Renders an error message to the UI and exits the app, calling `on_blur`. If `unload_app` is true, the
+   * Renders an error message to the UI and exits the app, calling `on_leave`. If `unload_app` is true, the
    * app will be unloaded after reporting the error, calling its `on_teardown` function, and removing it from the
    * list of loaded apps.
    *
@@ -104,13 +104,13 @@ constexpr T *construct_maybe_with_arg(Arg &&arg) {
 }
 
 template<typename T>
-concept HasOnFocus = requires(T &t, app_api_t controller_api) {
-  { t.on_focus(controller_api) } -> std::same_as<void>;
+concept HasOnEnter = requires(T &t, app_api_t controller_api) {
+  { t.on_enter(controller_api) } -> std::same_as<void>;
 };
 
 template<typename T>
-concept HasOnBlur = requires(T &t, app_api_t controller_api) {
-  { t.on_blur(controller_api) } -> std::same_as<void>;
+concept HasOnLeave = requires(T &t, app_api_t controller_api) {
+  { t.on_leave(controller_api) } -> std::same_as<void>;
 };
 
 template<typename T>
@@ -124,16 +124,16 @@ concept HasOnTeardown = requires(T &t, app_api_t controller_api) {
 };
 
 template<typename T>
-void on_focus_trampoline(void *userptr, app_api_t controller_api) {
-  if constexpr (HasOnFocus<T>) {
-    static_cast<T *>(userptr)->on_focus(controller_api);
+void on_enter_trampoline(void *userptr, app_api_t controller_api) {
+  if constexpr (HasOnEnter<T>) {
+    static_cast<T *>(userptr)->on_enter(controller_api);
   }
 }
 
 template<typename T>
-void on_blur_trampoline(void *userptr, app_api_t controller_api) {
-  if constexpr (HasOnBlur<T>) {
-    static_cast<T *>(userptr)->on_blur(controller_api);
+void on_leave_trampoline(void *userptr, app_api_t controller_api) {
+  if constexpr (HasOnLeave<T>) {
+    static_cast<T *>(userptr)->on_leave(controller_api);
   }
 }
 
@@ -152,17 +152,17 @@ void on_teardown_trampoline(void *userptr, app_api_t controller_api) {
 }
 
 template<typename T>
-consteval app_on_focus_fn_t get_on_focus_ptr() {
-  if constexpr (HasOnFocus<T>) {
-    return &on_focus_trampoline<T>;
+consteval app_on_enter_fn_t get_on_enter_ptr() {
+  if constexpr (HasOnEnter<T>) {
+    return &on_enter_trampoline<T>;
   }
   return nullptr;
 }
 
 template<typename T>
-consteval app_on_blur_fn_t get_on_blur_ptr() {
-  if constexpr (HasOnBlur<T>) {
-    return &on_blur_trampoline<T>;
+consteval app_on_leave_fn_t get_on_leave_ptr() {
+  if constexpr (HasOnLeave<T>) {
+    return &on_leave_trampoline<T>;
   }
   return nullptr;
 }
@@ -189,8 +189,8 @@ consteval app_on_keypress_fn_t get_on_keypress_ptr() {
                         _name,                                                            \
                         _##_class##__setup,                                               \
                         _##_class##__teardown,                                            \
-                        get_on_focus_ptr<_class>(),                                       \
-                        get_on_blur_ptr<_class>(),                                        \
+                        get_on_enter_ptr<_class>(),                                       \
+                        get_on_leave_ptr<_class>(),                                        \
                         get_on_keypress_ptr<_class>())
 
 /**

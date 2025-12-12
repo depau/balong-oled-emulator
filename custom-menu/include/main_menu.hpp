@@ -6,7 +6,7 @@ extern "C" app_descriptor_t *register_main_menu_app(app_api_t controller_api, vo
 
 class main_menu_app {
 public:
-  void on_focus(app_api_t controller_api);
-  void on_blur(app_api_t controller_api);
+  void on_enter(app_api_t controller_api);
+  void on_leave(app_api_t controller_api);
   void on_keypress(app_api_t controller_api, int button);
 };

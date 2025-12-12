@@ -17,14 +17,14 @@ public:
    *
    * @param controller_api The controller API object
    */
-  void on_focus(app_api_t controller_api);
+  void on_enter(app_api_t controller_api);
 
   /**
    * Called when the app loses focus
    *
    * @param controller_api The controller API object
    */
-  void on_blur(app_api_t controller_api);
+  void on_leave(app_api_t controller_api);
 
   /**
    * Handle a keypress event

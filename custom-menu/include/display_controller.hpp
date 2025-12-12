@@ -17,7 +17,9 @@
 
 DECLARE_FN_TYPE(plugin_register_fn_t, plugin_descriptor_t *, plugin_api_t controller_api, void **userptr);
 
-class display_controller {
+class display_controller : display_controller_api {
+  friend class main_menu_plugin;
+
   using plugin_loader_desc_t = std::pair<plugin_loader_callback_fn_t, void *>;
 
   uint16_t secret_screen_buf[LCD_WIDTH * LCD_HEIGHT]{};
@@ -41,14 +43,33 @@ class display_controller {
                                   },
                                    nullptr };
 
-  std::vector<plugin_descriptor> plugins;
-  std::map<std::string, plugin_loader_desc_t> plugin_loaders;
+  std::vector<std::string> plugin_lookup_paths = get_plugin_lookup_paths();
+  std::vector<std::pair<plugin_descriptor, void *>> plugins{};
+  std::map<std::string, plugin_loader_desc_t> plugin_loaders{};
+  std::optional<size_t> active_plugin_index = std::nullopt;
+
+  std::optional<std::string> plugin_error_message = std::nullopt;
 
   bool is_small_screen_mode = false;
   bool is_active = false;
 
+  static std::vector<std::string> get_plugin_lookup_paths();
+
+  void load_plugins();
+
+  void set_active_plugin(std::optional<size_t> plugin_index);
+
 public:
   display_controller();
+  ~display_controller();
+
+  // Forbid copying
+  display_controller(const display_controller &) = delete;
+  display_controller &operator=(const display_controller &) = delete;
+
+  // Allow moving
+  display_controller(display_controller &&) = default;
+  display_controller &operator=(display_controller &&) = default;
 
   // ReSharper disable once CppMemberFunctionMayBeStatic
   // NOLINTNEXTLINE(*-convert-member-functions-to-static)
@@ -59,18 +80,7 @@ public:
   [[nodiscard]] bool is_small_screen() const { return is_small_screen_mode; }
   [[nodiscard]] const font_registry_t &get_font_registry() const { return font_registry; }
 
-  void clay_render(const Clay_RenderCommandArray &cmds) {
-    if (is_small_screen_mode) {
-      ClayBW1Renderer renderer(secret_screen_buf, font_registry);
-      renderer.clear(false);
-      renderer.render(cmds);
-    } else {
-      ClayBGR565Renderer renderer(secret_screen_buf, font_registry);
-      renderer.clear(Clay_Color{ 0, 0, 0, 255 });
-      renderer.render(cmds);
-    }
-    lcd_refresh_screen(&secret_screen);
-  }
+  void clay_render(const Clay_RenderCommandArray &cmds);
 
   void draw_frame(const std::span<const uint16_t> &buf) {
     std::ranges::copy(buf, secret_screen_buf);
@@ -81,33 +91,23 @@ public:
     return draw_frame(static_cast<const std::span<const uint16_t>>(buf));
   }
 
-  [[nodiscard]] std::optional<uint16_t> get_font(const std::string &fontName, int fontSize) const {
-    for (uint16_t i = 0; i < font_registry.size(); ++i) {
-      const auto &font = font_registry[i];
-      if (font->name == fontName && font->size == fontSize)
-        return i;
-    }
-    return std::nullopt;
-  }
+  [[nodiscard]] std::optional<uint16_t> get_font(const std::string &fontName, int fontSize) const;
 
-  void set_active(const bool active) { is_active = active; }
+  void set_active(const bool active);
 
-  void switch_to_small_screen_mode() {
-    if (is_small_screen_mode)
-      return;
-
-    is_small_screen_mode = true;
-    secret_screen = { .sx = 0,
-                      .height = height(),
-                      .sy = 0,
-                      .width = width(),
-                      .buf_len = static_cast<uint16_t>(width() * height() / 8),
-                      .buf = secret_screen_buf };
-
-    Clay_SetLayoutDimensions(Clay_Dimensions{ 128, 64 });
-  }
+  void switch_to_small_screen_mode();
 
   void refresh_screen() const { lcd_refresh_screen(&secret_screen); }
 
   void on_keypress(int button);
+
+  void register_plugin_loader(const std::string &file_extension,
+                              plugin_loader_callback_fn_t loader_fn,
+                              void *userptr = nullptr) {
+    plugin_loaders[file_extension] = std::make_pair(loader_fn, userptr);
+  }
+
+  void goto_main_menu();
+
+  void fatal_error(const char *message, bool unload_plugin);
 };

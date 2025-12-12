@@ -204,4 +204,4 @@ consteval plugin_on_keypress_fn_t get_on_keypress_ptr() {
  * @param _class The plug-in class name
  */
 #define DECLARE_CPP_PLUGIN(_name, _class) \
-  _DECLARE_CPP_PLUGIN_INTERNAL(register_plugin, plugin_descriptor, _name, _class)
+  _DECLARE_CPP_PLUGIN_INTERNAL(REGISTER_PLUGIN_FN, PLUGIN_DESCRIPTOR, _name, _class)

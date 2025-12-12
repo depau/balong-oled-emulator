@@ -38,9 +38,16 @@ void plugin_api_draw_frame(const plugin_api_t controller_api, const uint16_t *bu
 }
 
 void plugin_api_goto_main_menu(plugin_api_t controller_api) {
-  // TODO implement
+  get_display_controller(controller_api).goto_main_menu();
 }
 
 void plugin_api_fatal_error(plugin_api_t controller_api, const char *message, bool unload_plugin) {
-  // TODO implement
+  get_display_controller(controller_api).fatal_error(message, unload_plugin);
+}
+
+void plugin_api_register_plugin_loader(const plugin_api_t controller_api,
+                                       const char *file_extension,
+                                       const plugin_loader_callback_fn_t loader_fn,
+                                       void *userptr) {
+  get_display_controller(controller_api).register_plugin_loader(file_extension, loader_fn, userptr);
 }

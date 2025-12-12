@@ -11,6 +11,13 @@
 
 #define FN_TYPE(_name, _ret, ...) _ret (*_name)(__VA_ARGS__)
 #define DECLARE_FN_TYPE(_name, _ret, ...) typedef FN_TYPE(_name, _ret, __VA_ARGS__)
+#define _STRINGIFY(x) #x // NOLINT(*-reserved-identifier)
+#define STRINGIFY(x) _STRINGIFY(x)
+
+#define REGISTER_PLUGIN_FN register_plugin
+#define PLUGIN_DESCRIPTOR plugin_descriptor
+#define REGISTER_PLUGIN_FN_NAME STRINGIFY(REGISTER_PLUGIN_FN)
+#define PLUGIN_DESCRIPTOR_NAME STRINGIFY(PLUGIN_DESCRIPTOR_NAME)
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
@@ -129,7 +136,7 @@ DECLARE_FN_TYPE(plugin_setup_fn_t, void *, plugin_api_t controller_api);
  * @param _on_keypress Optional keypress callback
  */
 #define DECLARE_PLUGIN(_plugin_name, _setup_fn, _teardown_fn, ...) \
-  _DECLARE_PLUGIN_INTERNAL(register_plugin, plugin_descriptor, _plugin_name, _setup_fn, _teardown_fn, __VA_ARGS__)
+  _DECLARE_PLUGIN_INTERNAL(REGISTER_PLUGIN_FN, PLUGIN_DESCRIPTOR, _plugin_name, _setup_fn, _teardown_fn, __VA_ARGS__)
 
 /**
  * Plug-in loader callback type

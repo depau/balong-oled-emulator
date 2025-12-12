@@ -5,6 +5,7 @@ add_library(balong_custom_menu SHARED
         src/plugin_api.cpp
         src/main_menu.cpp
         plugins/hello_world/src/plugin.cpp
+        src/so_plugin_loader.cpp
 )
 target_include_directories(balong_custom_menu PRIVATE
         "${COMMON_INCLUDE_DIR}"

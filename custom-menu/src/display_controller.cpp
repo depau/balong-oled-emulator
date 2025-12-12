@@ -3,7 +3,7 @@
 
 #include "display_controller.hpp"
 #include "main_menu.hpp"
-#include "so_plugin_loader.hpp"
+#include "so_app_loader.hpp"
 
 namespace fs = std::filesystem;
 
@@ -36,13 +36,13 @@ static Clay_Dimensions ClayMeasureText(Clay_StringSlice text, Clay_TextElementCo
 display_controller::display_controller() {
   Clay_Initialize(arena, Clay_Dimensions{ 128, 128 }, errHandler);
   Clay_SetMeasureTextFunction(&ClayMeasureText, this);
-  load_plugins();
+  load_apps();
 }
 
 display_controller::~display_controller() {
-  set_active_plugin(std::nullopt);
-  plugin_loaders.clear();
-  for (auto &[descriptor, userptr] : plugins) {
+  set_active_app(std::nullopt);
+  app_loaders.clear();
+  for (auto &[descriptor, userptr] : apps) {
     if (descriptor.on_teardown)
       descriptor.on_teardown(userptr, this);
   }
@@ -66,22 +66,22 @@ static std::optional<fs::path> deref_symlink(fs::path p) {
   return std::nullopt;
 }
 
-static bool plugin_file_sort(const fs::path &a, const fs::path &b) {
+static bool app_file_sort(const fs::path &a, const fs::path &b) {
   return a.filename().string() < b.filename().string();
 }
 
-void display_controller::load_plugins() {
-  assert(plugins.empty() && "Plugins have already been loaded");
+void display_controller::load_apps() {
+  assert(apps.empty() && "Apps have already been loaded");
 
-  register_plugin_loader(".so", load_plugin_shared_object);
+  register_app_loader(".so", load_app_shared_object);
 
   void *main_menu_userptr = nullptr;
-  plugins.emplace_back(*register_main_menu_plugin(this, &main_menu_userptr), main_menu_userptr);
+  apps.emplace_back(*register_main_menu_app(this, &main_menu_userptr), main_menu_userptr);
 
   std::vector<fs::path> files;
-  for (const auto &path : plugin_lookup_paths) {
+  for (const auto &path : app_lookup_paths) {
     if (!fs::is_directory(path)) {
-      std::cerr << "Plugin lookup path is not a directory: " << path << std::endl;
+      std::cerr << "App lookup path is not a directory: " << path << std::endl;
       continue;
     }
     for (const auto &entry : fs::directory_iterator(path)) {
@@ -92,68 +92,68 @@ void display_controller::load_plugins() {
     }
   }
 
-  std::ranges::sort(files, plugin_file_sort);
+  std::ranges::sort(files, app_file_sort);
 
   for (const auto &file_path : files) {
     const std::string ext = file_path.extension().string();
-    const auto it = plugin_loaders.find(ext);
-    if (it == plugin_loaders.end()) {
-      std::cerr << "No plugin loader registered for extension: " << ext << std::endl;
+    const auto it = app_loaders.find(ext);
+    if (it == app_loaders.end()) {
+      std::cerr << "No app loader registered for extension: " << ext << std::endl;
       continue;
     }
 
-    void *plugin_userptr = nullptr;
+    void *app_userptr = nullptr;
     auto &[loader, loader_userptr] = it->second;
-    plugin_descriptor *descriptor = loader(loader_userptr, this, file_path.string().c_str(), &plugin_userptr);
+    app_descriptor *descriptor = loader(loader_userptr, this, file_path.string().c_str(), &app_userptr);
     if (!descriptor) {
-      std::cerr << "Failed to load plugin: " << file_path << std::endl;
+      std::cerr << "Failed to load app: " << file_path << std::endl;
       continue;
     }
 
-    plugins.emplace_back(*descriptor, plugin_userptr);
-    std::cout << "Loaded plugin: " << descriptor->name << " from " << file_path << std::endl;
+    apps.emplace_back(*descriptor, app_userptr);
+    std::cout << "Loaded app: " << descriptor->name << " from " << file_path << std::endl;
   }
 }
 
-void display_controller::set_active_plugin(std::optional<size_t> plugin_index) {
-  assert(!plugin_index.has_value() || plugin_index.value() < plugins.size());
-  if (plugin_index == active_plugin_index)
+void display_controller::set_active_app(std::optional<size_t> app_index) {
+  assert(!app_index.has_value() || app_index.value() < apps.size());
+  if (app_index == active_app_index)
     return;
-  if (active_plugin_index.has_value()) {
-    if (auto &[descriptor, userptr] = plugins[active_plugin_index.value()]; descriptor.on_blur) {
+  if (active_app_index.has_value()) {
+    if (auto &[descriptor, userptr] = apps[active_app_index.value()]; descriptor.on_blur) {
       descriptor.on_blur(userptr, this);
     }
   }
-  active_plugin_index = plugin_index;
-  if (active_plugin_index.has_value()) {
-    auto &[descriptor, userptr] = plugins[active_plugin_index.value()];
-    assert(descriptor.on_focus != nullptr && "Active plugin must have on_focus callback");
+  active_app_index = app_index;
+  if (active_app_index.has_value()) {
+    auto &[descriptor, userptr] = apps[active_app_index.value()];
+    assert(descriptor.on_focus != nullptr && "Active app must have on_focus callback");
     descriptor.on_focus(userptr, this);
   }
 }
 
-std::vector<std::string> display_controller::get_plugin_lookup_paths() {
-  std::vector<std::string> plugin_lookup_paths;
-  if (plugin_lookup_paths.empty()) {
-    if (const char *env_paths = std::getenv("CUSTOM_MENU_PLUGIN_PATHS"); env_paths != nullptr) {
+std::vector<std::string> display_controller::get_app_lookup_paths() {
+  std::vector<std::string> app_lookup_paths;
+  if (app_lookup_paths.empty()) {
+    if (const char *env_paths = std::getenv("CUSTOM_MENU_APP_PATHS"); env_paths != nullptr) {
       std::string paths_str(env_paths);
       size_t start = 0;
       size_t end = paths_str.find(':');
       while (end != std::string::npos) {
-        plugin_lookup_paths.emplace_back(paths_str.substr(start, end - start));
+        app_lookup_paths.emplace_back(paths_str.substr(start, end - start));
         start = end + 1;
         end = paths_str.find(':', start);
       }
-      plugin_lookup_paths.emplace_back(paths_str.substr(start));
+      app_lookup_paths.emplace_back(paths_str.substr(start));
     }
 
-    plugin_lookup_paths.emplace_back("./plugins/");
+    app_lookup_paths.emplace_back("./apps/");
 
-#ifdef PLUGIN_LOOKUP_PATH
-    plugin_lookup_paths.emplace_back(PLUGIN_LOOKUP_PATH);
+#ifdef APP_LOOKUP_PATH
+    app_lookup_paths.emplace_back(APP_LOOKUP_PATH);
 #endif
   }
-  return plugin_lookup_paths;
+  return app_lookup_paths;
 }
 
 void display_controller::clay_render(const Clay_RenderCommandArray &cmds) {
@@ -183,9 +183,9 @@ void display_controller::set_active(const bool active) {
     return;
 
   if (!active) {
-    set_active_plugin(std::nullopt);
+    set_active_app(std::nullopt);
   } else {
-    set_active_plugin(0);
+    set_active_app(0);
   }
   is_active = active;
 }
@@ -206,26 +206,26 @@ void display_controller::switch_to_small_screen_mode() {
 }
 
 void display_controller::on_keypress(const int button) {
-  if (active_plugin_index.has_value()) {
-    if (auto &[descriptor, userptr] = plugins[active_plugin_index.value()]; descriptor.on_keypress) {
+  if (active_app_index.has_value()) {
+    if (auto &[descriptor, userptr] = apps[active_app_index.value()]; descriptor.on_keypress) {
       descriptor.on_keypress(userptr, this, button);
     }
   }
 }
 
 void display_controller::goto_main_menu() {
-  assert(!plugins.empty() && "No plugins loaded, cannot go to main menu");
-  set_active_plugin(0);
+  assert(!apps.empty() && "No apps loaded, cannot go to main menu");
+  set_active_app(0);
 }
 
-void display_controller::fatal_error(const char *message, bool unload_plugin) {
-  plugin_error_message = message;
-  auto prev_active_index = active_plugin_index;
+void display_controller::fatal_error(const char *message, bool unload_app) {
+  app_error_message = message;
+  auto prev_active_index = active_app_index;
   goto_main_menu();
-  if (unload_plugin && prev_active_index.has_value() && prev_active_index.value() != 0) {
-    if (auto &[descriptor, userptr] = plugins[prev_active_index.value()]; descriptor.on_teardown) {
+  if (unload_app && prev_active_index.has_value() && prev_active_index.value() != 0) {
+    if (auto &[descriptor, userptr] = apps[prev_active_index.value()]; descriptor.on_teardown) {
       descriptor.on_teardown(userptr, this);
     }
-    plugins.erase(plugins.begin() + static_cast<ptrdiff_t>(*prev_active_index));
+    apps.erase(apps.begin() + static_cast<ptrdiff_t>(*prev_active_index));
   }
 }

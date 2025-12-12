@@ -1,30 +1,30 @@
-#include "plugins/plugin_api.hpp"
+#include "apps/app_api.hpp"
 
-class my_plugin {
+class my_app {
 public:
   // Provide one or both constructors; the constructor with the controller_api parameter is preferred if both are
   // provided
-  my_plugin() {
+  my_app() {
     // Default constructor
   }
 
-  explicit my_plugin(plugin_api_t controller_api) {
+  explicit my_app(app_api_t controller_api) {
     // Constructor with controller API
   }
 
   /**
-   * Called when the plugin gains focus
+   * Called when the app gains focus
    *
    * @param controller_api The controller API object
    */
-  void on_focus(plugin_api_t controller_api);
+  void on_focus(app_api_t controller_api);
 
   /**
-   * Called when the plugin loses focus
+   * Called when the app loses focus
    *
    * @param controller_api The controller API object
    */
-  void on_blur(plugin_api_t controller_api);
+  void on_blur(app_api_t controller_api);
 
   /**
    * Handle a keypress event
@@ -32,7 +32,7 @@ public:
    * @param controller_api The controller API object
    * @param button The button that was pressed
    */
-  void on_keypress(plugin_api_t controller_api, int button);
+  void on_keypress(app_api_t controller_api, int button);
 };
 
-DECLARE_CPP_PLUGIN("My Plugin", my_plugin);
+DECLARE_CPP_APP("My App", my_app);

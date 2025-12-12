@@ -1,12 +1,12 @@
 #pragma once
 
-#include "plugins/plugin_api.hpp"
+#include "apps/app_api.hpp"
 
-extern "C" plugin_descriptor_t *register_main_menu_plugin(plugin_api_t controller_api, void **userptr);
+extern "C" app_descriptor_t *register_main_menu_app(app_api_t controller_api, void **userptr);
 
-class main_menu_plugin {
+class main_menu_app {
 public:
-  void on_focus(plugin_api_t controller_api);
-  void on_blur(plugin_api_t controller_api);
-  void on_keypress(plugin_api_t controller_api, int button);
+  void on_focus(app_api_t controller_api);
+  void on_blur(app_api_t controller_api);
+  void on_keypress(app_api_t controller_api, int button);
 };

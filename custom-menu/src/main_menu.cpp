@@ -4,9 +4,9 @@
 #include "clay.hpp"
 #include "main_menu.hpp"
 
-_DECLARE_CPP_PLUGIN_INTERNAL(register_main_menu_plugin, main_menu_plugin_descriptor, "Main Menu", main_menu_plugin);
+_DECLARE_CPP_APP_INTERNAL(register_main_menu_app, main_menu_app_descriptor, "Main Menu", main_menu_app);
 
-void main_menu_plugin::on_focus(plugin_api_t controller_api) { // NOLINT(*-convert-member-functions-to-static)
+void main_menu_app::on_focus(app_api_t controller_api) { // NOLINT(*-convert-member-functions-to-static)
   Clay_BeginLayout();
   std::cout << "Rendering menu UI frame\n";
   constexpr Clay_Color COLOR_BG = { 20, 20, 40, 255 };
@@ -77,11 +77,11 @@ void main_menu_plugin::on_focus(plugin_api_t controller_api) { // NOLINT(*-conve
   controller_api->clay_render(Clay_EndLayout());
 }
 
-void main_menu_plugin::on_blur(plugin_api_t controller_api) {
+void main_menu_app::on_blur(app_api_t controller_api) {
   // Cleanup or stop rendering the main menu UI here
 }
 
-void main_menu_plugin::on_keypress(plugin_api_t controller_api, int button) {
+void main_menu_app::on_keypress(app_api_t controller_api, int button) {
   std::cout << "Main menu received keypress: " << button << '\n';
   on_focus(controller_api);
   // Handle keypress events for the main menu here

@@ -8,19 +8,19 @@
 #include <string>
 #include <vector>
 
+#include "apps/app_api.hpp"
 #include "clay.hpp"
 #include "clay_fb_renderer.hpp"
 #include "clay_utils.hpp"
 #include "fonts/poppins_12.hpp"
 #include "hooked_functions.h"
-#include "plugins/plugin_api.hpp"
 
-DECLARE_FN_TYPE(plugin_register_fn_t, plugin_descriptor_t *, plugin_api_t controller_api, void **userptr);
+DECLARE_FN_TYPE(app_register_fn_t, app_descriptor_t *, app_api_t controller_api, void **userptr);
 
 class display_controller : display_controller_api {
-  friend class main_menu_plugin;
+  friend class main_menu_app;
 
-  using plugin_loader_desc_t = std::pair<plugin_loader_callback_fn_t, void *>;
+  using app_loader_desc_t = std::pair<app_loader_callback_fn_t, void *>;
 
   uint16_t secret_screen_buf[LCD_WIDTH * LCD_HEIGHT]{};
   lcd_screen secret_screen{ .sx = 1,
@@ -43,21 +43,21 @@ class display_controller : display_controller_api {
                                   },
                                    nullptr };
 
-  std::vector<std::string> plugin_lookup_paths = get_plugin_lookup_paths();
-  std::vector<std::pair<plugin_descriptor, void *>> plugins{};
-  std::map<std::string, plugin_loader_desc_t> plugin_loaders{};
-  std::optional<size_t> active_plugin_index = std::nullopt;
+  std::vector<std::string> app_lookup_paths = get_app_lookup_paths();
+  std::vector<std::pair<app_descriptor, void *>> apps{};
+  std::map<std::string, app_loader_desc_t> app_loaders{};
+  std::optional<size_t> active_app_index = std::nullopt;
 
-  std::optional<std::string> plugin_error_message = std::nullopt;
+  std::optional<std::string> app_error_message = std::nullopt;
 
   bool is_small_screen_mode = false;
   bool is_active = false;
 
-  static std::vector<std::string> get_plugin_lookup_paths();
+  static std::vector<std::string> get_app_lookup_paths();
 
-  void load_plugins();
+  void load_apps();
 
-  void set_active_plugin(std::optional<size_t> plugin_index);
+  void set_active_app(std::optional<size_t> app_index);
 
 public:
   display_controller();
@@ -101,13 +101,13 @@ public:
 
   void on_keypress(int button);
 
-  void register_plugin_loader(const std::string &file_extension,
-                              plugin_loader_callback_fn_t loader_fn,
+  void register_app_loader(const std::string &file_extension,
+                              app_loader_callback_fn_t loader_fn,
                               void *userptr = nullptr) {
-    plugin_loaders[file_extension] = std::make_pair(loader_fn, userptr);
+    app_loaders[file_extension] = std::make_pair(loader_fn, userptr);
   }
 
   void goto_main_menu();
 
-  void fatal_error(const char *message, bool unload_plugin);
+  void fatal_error(const char *message, bool unload_app);
 };

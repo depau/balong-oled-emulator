@@ -2,10 +2,9 @@ add_library(balong_custom_menu SHARED
         src/main.cpp
         src/display_controller.cpp
         src/clay.c
-        src/plugin_api.cpp
+        src/app_api.cpp
         src/main_menu.cpp
-        plugins/hello_world/src/plugin.cpp
-        src/so_plugin_loader.cpp
+        src/so_app_loader.cpp
 )
 target_include_directories(balong_custom_menu PRIVATE
         "${COMMON_INCLUDE_DIR}"
@@ -14,4 +13,4 @@ target_include_directories(balong_custom_menu PRIVATE
 )
 setup_sanitizers(balong_custom_menu)
 
-add_subdirectory(plugins)
+add_subdirectory(apps)

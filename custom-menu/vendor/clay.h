@@ -1376,8 +1376,8 @@ Clay_String Clay__WriteStringToCharBuffer(Clay__charArray *buffer, Clay_String s
 }
 
 #ifdef CLAY_WASM
-__attribute__((import_module("clay"), import_name("measureTextFunction"))) Clay_Dimensions
-Clay__MeasureText(Clay_StringSlice text, Clay_TextElementConfig *config, void *userData);
+__attribute__((import_module("clay"), import_name("measureTextFunction")))
+Clay_Dimensions Clay__MeasureText(Clay_StringSlice text, Clay_TextElementConfig *config, void *userData);
 __attribute__((import_module("clay"), import_name("queryScrollOffsetFunction"))) Clay_Vector2
 Clay__QueryScrollOffset(uint32_t elementId, void *userData);
 #else

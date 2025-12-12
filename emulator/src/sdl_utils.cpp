@@ -46,7 +46,7 @@ void convert_bw1bit_to_rgb888(const std::span<uint16_t> &bw1bit_buf, std::vector
   for (auto pixel : bw1bit_buf) {
     pixel = __bswap_16(pixel);
     for (int i = 15; i >= 0; --i) {
-      rgb888_buf.push_back(pixel & (1 << i) ? 0xFFFFFF: 0x000000);
+      rgb888_buf.push_back(pixel & (1 << i) ? 0xFFFFFF : 0x000000);
     }
   }
 }

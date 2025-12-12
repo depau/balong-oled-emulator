@@ -101,9 +101,8 @@ public:
 
   void on_keypress(int button);
 
-  void register_app_loader(const std::string &file_extension,
-                              app_loader_callback_fn_t loader_fn,
-                              void *userptr = nullptr) {
+  void
+  register_app_loader(const std::string &file_extension, app_loader_callback_fn_t loader_fn, void *userptr = nullptr) {
     app_loaders[file_extension] = std::make_pair(loader_fn, userptr);
   }
 

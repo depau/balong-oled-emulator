@@ -108,17 +108,12 @@ typedef struct app_descriptor {
 DECLARE_FN_TYPE(app_setup_fn_t, void *, app_api_t controller_api);
 
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
-#define _DECLARE_APP_INTERNAL(_register_app_fn_name,                                              \
-                                 _descriptor_name,                                                      \
-                                 _app_name,                                                          \
-                                 _setup_fn,                                                             \
-                                 _teardown_fn,                                                          \
-                                 ...)                                                                   \
-  app_descriptor_t _descriptor_name = { _app_name, _teardown_fn, __VA_ARGS__ };                   \
-  EXTERN_C app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) { \
-    *userptr = _setup_fn(controller_api);                                                               \
-    return &_descriptor_name;                                                                           \
-  }                                                                                                     \
+#define _DECLARE_APP_INTERNAL(_register_app_fn_name, _descriptor_name, _app_name, _setup_fn, _teardown_fn, ...) \
+  app_descriptor_t _descriptor_name = { _app_name, _teardown_fn, __VA_ARGS__ };                                 \
+  EXTERN_C app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) {                  \
+    *userptr = _setup_fn(controller_api);                                                                       \
+    return &_descriptor_name;                                                                                   \
+  }                                                                                                             \
   typedef void fake_typedef_to_enforce_semicolon_after_macro
 
 /**
@@ -237,9 +232,9 @@ void app_api_fatal_error(app_api_t controller_api, const char *message, bool unl
  * @param userptr A user pointer to pass to the loader function
  */
 void app_api_register_app_loader(app_api_t controller_api,
-                                       const char *file_extension,
-                                       app_loader_callback_fn_t loader_fn,
-                                       void *userptr);
+                                 const char *file_extension,
+                                 app_loader_callback_fn_t loader_fn,
+                                 void *userptr);
 
 #ifdef __cplusplus
 }

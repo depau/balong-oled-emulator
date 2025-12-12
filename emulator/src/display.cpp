@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "display.h"
-#include "hooks.h"
 #include "hooked_functions.h"
+#include "hooks.h"
 #include "sdl_utils.h"
 #include "thread_name.h"
 

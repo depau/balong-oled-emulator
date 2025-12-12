@@ -5,8 +5,7 @@
 #include "display_controller.hpp"
 #include "so_app_loader.hpp"
 
-app_descriptor *
-load_app_shared_object(void *, app_api_t controller_api, const char *app_path, void **app_userptr) {
+app_descriptor *load_app_shared_object(void *, app_api_t controller_api, const char *app_path, void **app_userptr) {
   void *handle = dlopen(app_path, RTLD_NOW | RTLD_LOCAL);
   if (!handle) {
     std::cerr << "Failed to load app shared object: " << dlerror() << std::endl;

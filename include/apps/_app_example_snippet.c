@@ -34,9 +34,4 @@ static void my_app_on_keypress(void *userptr, app_api_t controller_api, int butt
   // Handle keypress event
 }
 
-DECLARE_APP("My App",
-               my_app_setup,
-               my_app_teardown,
-               my_app_on_enter,
-               my_app_on_leave,
-               my_app_on_keypress);
+DECLARE_APP("My App", my_app_setup, my_app_teardown, my_app_on_enter, my_app_on_leave, my_app_on_keypress);

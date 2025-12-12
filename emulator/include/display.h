@@ -7,8 +7,8 @@
 #include <thread>
 #include <vector>
 
-#include "hooks.h"
 #include "hooked_functions.h"
+#include "hooks.h"
 #include "timer.h"
 
 static constexpr size_t FRAMEBUFFER_COUNT = 2;

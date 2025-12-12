@@ -46,8 +46,8 @@ void app_api_fatal_error(app_api_t controller_api, const char *message, bool unl
 }
 
 void app_api_register_app_loader(const app_api_t controller_api,
-                                       const char *file_extension,
-                                       const app_loader_callback_fn_t loader_fn,
-                                       void *userptr) {
+                                 const char *file_extension,
+                                 const app_loader_callback_fn_t loader_fn,
+                                 void *userptr) {
   get_display_controller(controller_api).register_app_loader(file_extension, loader_fn, userptr);
 }

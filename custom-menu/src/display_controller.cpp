@@ -1,4 +1,5 @@
 #include <cassert>
+#include <dlfcn.h>
 #include <filesystem>
 
 #include "display_controller.hpp"
@@ -34,6 +35,12 @@ static Clay_Dimensions ClayMeasureText(Clay_StringSlice text, Clay_TextElementCo
 }
 
 display_controller::display_controller() {
+  timer_create_ex = reinterpret_cast<uint32_t (*)(uint32_t, uint32_t, void (*)(void *), void *)>(
+    dlsym(RTLD_DEFAULT, "osa_timer_create_ex"));
+  timer_delete_ex = reinterpret_cast<uint32_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "osa_timer_delete_ex"));
+  assert(timer_create_ex != nullptr && "Failed to locate osa_timer_create_ex");
+  assert(timer_delete_ex != nullptr && "Failed to locate osa_timer_delete_ex");
+
   Clay_Initialize(arena, Clay_Dimensions{ 128, 128 }, errHandler);
   Clay_SetMeasureTextFunction(&ClayMeasureText, this);
   load_apps();
@@ -234,9 +241,9 @@ uint32_t display_controller::schedule_timer(void (*callback)(void *userptr),
                                             const uint32_t interval_ms,
                                             const bool repeat,
                                             void *userptr) {
-  return osa_timer_create_ex(interval_ms, repeat, callback, userptr);
+  return timer_create_ex(interval_ms, repeat, callback, userptr);
 }
 
 uint32_t display_controller::cancel_timer(const uint32_t timer_id) {
-  return osa_timer_delete_ex(timer_id);
+  return timer_delete_ex(timer_id);
 }

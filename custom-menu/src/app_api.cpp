@@ -52,14 +52,14 @@ void app_api_register_app_loader(const app_api_t controller_api,
   get_display_controller(controller_api).register_app_loader(file_extension, loader_fn, userptr);
 }
 
-uint32_t app_api_schedule_timer(app_api_t,
+uint32_t app_api_schedule_timer(app_api_t controller_api,
                                 const uint32_t time,
                                 const uint32_t repeat,
                                 void (*callback)(void *userptr),
                                 void *userptr) {
-  return display_controller::schedule_timer(callback, time, repeat != 0, userptr);
+  return get_display_controller(controller_api).schedule_timer(callback, time, repeat != 0, userptr);
 }
 
-uint32_t app_api_cancel_timer(app_api_t, const uint32_t timer_id) {
-  return display_controller::cancel_timer(timer_id);
+uint32_t app_api_cancel_timer(app_api_t controller_api, const uint32_t timer_id) {
+  return get_display_controller(controller_api).cancel_timer(timer_id);
 }

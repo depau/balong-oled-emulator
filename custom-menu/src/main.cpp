@@ -15,8 +15,6 @@ int (*notify_handler_async_real)(int subsystemid, int action, int subaction) = n
 void (*lcd_refresh_screen_real)(const lcd_screen *screen) = nullptr;
 int (*lcd_control_operate_real)(int lcd_mode) = nullptr;
 
-uint32_t (*timer_create_ex)(uint32_t, uint32_t, void (*)(), uint32_t) = nullptr;
-uint32_t (*timer_delete_ex)(uint32_t) = nullptr;
 uint32_t (*get_msgQ_id)(uint32_t) = nullptr;
 uint32_t (*msgQex_send)(uint32_t, uint32_t *, uint32_t, uint32_t) = nullptr;
 
@@ -103,16 +101,12 @@ register_notify_handler(int subsystemid, void *notify_handler_sync, notify_handl
     dlsym(RTLD_NEXT, "lcd_refresh_screen"));
   lcd_control_operate_real = reinterpret_cast<int (*)(int lcd_mode)>(dlsym(RTLD_NEXT, "lcd_control_operate"));
 
-  timer_create_ex = reinterpret_cast<uint32_t (*)(uint32_t, uint32_t, void (*)(), uint32_t)>(
-    dlsym(RTLD_DEFAULT, "osa_timer_create_ex"));
-  timer_delete_ex = reinterpret_cast<uint32_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "osa_timer_delete_ex"));
-
   get_msgQ_id = reinterpret_cast<uint32_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "osa_get_msgQ_id"));
   msgQex_send = reinterpret_cast<uint32_t (*)(uint32_t, uint32_t *, uint32_t, uint32_t)>(
     dlsym(RTLD_DEFAULT, "osa_msgQex_send"));
 
-  if (!register_notify_handler_real || !lcd_refresh_screen_real || !lcd_control_operate_real || !timer_create_ex ||
-      !timer_delete_ex || !get_msgQ_id || !msgQex_send) {
+  if (!register_notify_handler_real || !lcd_refresh_screen_real || !lcd_control_operate_real || !get_msgQ_id ||
+      !msgQex_send) {
     std::cerr << "The program is not compatible with this device" << std::endl;
     return 1;
   }

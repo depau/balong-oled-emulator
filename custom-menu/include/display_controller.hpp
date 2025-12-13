@@ -21,6 +21,9 @@ class display_controller : display_controller_api {
 
   using app_loader_desc_t = std::pair<app_loader_callback_fn_t, void *>;
 
+  uint32_t (*timer_create_ex)(uint32_t, uint32_t, void (*)(void *), void *);
+  uint32_t (*timer_delete_ex)(uint32_t);
+
   uint16_t secret_screen_buf[LCD_WIDTH * LCD_HEIGHT]{};
   lcd_screen secret_screen{ .sx = 1,
                             .height = 128,
@@ -109,8 +112,8 @@ public:
 
   void fatal_error(const char *message, bool unload_app);
 
-  static uint32_t
+  uint32_t
   schedule_timer(void (*callback)(void *userptr), uint32_t interval_ms, bool repeat = false, void *userptr = nullptr);
 
-  static uint32_t cancel_timer(uint32_t timer_id);
+  uint32_t cancel_timer(uint32_t timer_id);
 };

@@ -1,5 +1,5 @@
 #pragma once
 
 namespace ui {
-class ui_session {};
+class UIContext {};
 } // namespace ui

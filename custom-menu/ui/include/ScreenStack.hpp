@@ -2,6 +2,6 @@
 
 namespace ui {
 
-class screen {};
+class ScreenStack {};
 
 } // namespace ui

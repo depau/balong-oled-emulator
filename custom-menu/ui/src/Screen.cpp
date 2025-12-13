@@ -1,3 +1,3 @@
-#include "screen.hpp"
+#include "Screen.hpp"
 
 namespace ui {} // namespace ui

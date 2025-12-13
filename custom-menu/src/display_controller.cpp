@@ -229,3 +229,14 @@ void display_controller::fatal_error(const char *message, bool unload_app) {
     apps.erase(apps.begin() + static_cast<ptrdiff_t>(*prev_active_index));
   }
 }
+
+uint32_t display_controller::schedule_timer(void (*callback)(void *userptr),
+                                            const uint32_t interval_ms,
+                                            const bool repeat,
+                                            void *userptr) {
+  return osa_timer_create_ex(interval_ms, repeat, callback, userptr);
+}
+
+uint32_t display_controller::cancel_timer(const uint32_t timer_id) {
+  return osa_timer_delete_ex(timer_id);
+}

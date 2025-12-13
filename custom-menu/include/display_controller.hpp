@@ -108,4 +108,9 @@ public:
   void goto_main_menu();
 
   void fatal_error(const char *message, bool unload_app);
+
+  static uint32_t
+  schedule_timer(void (*callback)(void *userptr), uint32_t interval_ms, bool repeat = false, void *userptr = nullptr);
+
+  static uint32_t cancel_timer(uint32_t timer_id);
 };

@@ -224,7 +224,7 @@ void app_api_goto_main_menu(app_api_t controller_api);
 void app_api_fatal_error(app_api_t controller_api, const char *message, bool unload_app);
 
 /**
- * Register a app loader for a specific file extension
+ * Register an app loader for a specific file extension
  *
  * @param controller_api The controller API object
  * @param file_extension The file extension to register (including the dot, e.g. ".so")
@@ -235,6 +235,31 @@ void app_api_register_app_loader(app_api_t controller_api,
                                  const char *file_extension,
                                  app_loader_callback_fn_t loader_fn,
                                  void *userptr);
+
+/**
+ * Register a timer callback
+ *
+ * @param controller_api The controller API object
+ * @param time Time in milliseconds until the timer fires
+ * @param repeat Whether the timer should repeat
+ * @param callback The callback function to call when the timer fires
+ * @param userptr A user pointer to pass to the callback function
+ * @return The timer ID
+ */
+uint32_t app_api_schedule_timer(app_api_t controller_api,
+                                uint32_t time,
+                                uint32_t repeat,
+                                void (*callback)(void *userptr),
+                                void *userptr);
+
+/**
+ * Cancel a previously registered timer
+ *
+ * @param controller_api The controller API object
+ * @param timer_id The ID of the timer to cancel
+ * @return 0 on success, non-zero on failure
+ */
+uint32_t app_api_cancel_timer(app_api_t controller_api, uint32_t timer_id);
 
 #ifdef __cplusplus
 }

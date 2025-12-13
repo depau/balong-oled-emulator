@@ -144,7 +144,7 @@ void Display::set_short_screen_mode(const bool enabled) {
   lcd_refresh_screen(&notification_screen);
 
   // Schedule reset to clear out the black screen
-  schedule([&] { reset_display(); }, FRAME_TIME_MS, false);
+  schedule([&](void *) { reset_display(); }, FRAME_TIME_MS, false);
 }
 
 void Display::set_brightness(const uint8_t value) {
@@ -156,7 +156,7 @@ void Display::set_brightness(const uint8_t value) {
 
 uint32_t Display::schedule(timer::callback_t &&callback, const uint32_t interval_ms, const bool repeat, void *userptr) {
   std::scoped_lock lock(thread_mutex);
-  timers.emplace_back(std::move(callback), interval_ms, repeat);
+  timers.emplace_back(std::move(callback), interval_ms, userptr, repeat);
   std::push_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
   return timers.back().get_id();
 }
@@ -210,7 +210,7 @@ void Display::dispatch_button(const int button_id, bool use_timer) {
   paint_rgb888(rgb888_buf);
 
   if (use_timer)
-    schedule([&] { reset_display(); }, 500, false);
+    schedule([&](void *) { reset_display(); }, 500, false);
 }
 
 void Display::timer_thread_loop() {

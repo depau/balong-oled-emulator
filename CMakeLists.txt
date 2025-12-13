@@ -3,6 +3,7 @@ project(balong_oled_emulator)
 
 option(ENABLE_SANITIZERS "Enable sanitizers" OFF)
 option(EMULATOR "Build the emulator" ON)
+option(DEBUG_HACK "Get debug messages from the oled executable when the custom menu library is loaded" OFF)
 
 set(CMAKE_CXX_STANDARD 23)
 

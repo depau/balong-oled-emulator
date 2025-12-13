@@ -1,4 +1,6 @@
+#include <cstdarg>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <dlfcn.h>
 #include <iostream>
@@ -149,5 +151,27 @@ extern "C" int capset(const cap_user_header_t header, const cap_user_data_t data
 
   return capset_real(header, data);
 }
+
+#ifdef DEBUG_HACK
+extern "C" int32_t ATP_TRACE_IsModuleEnabled(int32_t arg1, int32_t arg2) {
+  fprintf(stderr, "ATP_TRACE_IsModuleEnabled: %d, %d\n", arg1, arg2);
+  return 1;
+}
+
+extern "C" int32_t ATP_TRACE_PrintInfo(const char *filename,
+                                       const int32_t lineno,
+                                       const int32_t unk,
+                                       char *category,
+                                       const int32_t level,
+                                       const char *format,
+                                       ...) {
+  fprintf(stdout, "ATP_TRACE[%s, %d, %d]: %s:%d ", category, level, unk, filename, lineno);
+  va_list args;
+  va_start(args, format);
+  vfprintf(stdout, format, args);
+  va_end(args);
+  return 1;
+}
+#endif
 
 // No actual main(): this is a shared library loaded via LD_PRELOAD, the entry point is register_notify_handler().

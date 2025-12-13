@@ -16,5 +16,9 @@ target_link_libraries(balong_custom_menu PRIVATE
 )
 setup_sanitizers(balong_custom_menu)
 
+if (DEBUG_HACK)
+    target_compile_definitions(balong_custom_menu PRIVATE DEBUG_HACK=1)
+endif ()
+
 add_subdirectory(ui)
 add_subdirectory(apps)

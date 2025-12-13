@@ -124,24 +124,33 @@ constexpr T *construct_maybe_with_arg(Arg &&arg) {
   }
 }
 
+// The Android SDK 19 does not support std::same_as, so we reimplement it here
+namespace sdk19compat {
+template<typename _Tp, typename _Up>
+concept __same_as = std::is_same_v<_Tp, _Up>;
+
+template<typename _Tp, typename _Up>
+concept same_as = __same_as<_Tp, _Up> && __same_as<_Up, _Tp>;
+} // namespace sdk19compat
+
 template<typename T>
 concept HasOnEnter = requires(T &t, app_api_t controller_api) {
-  { t.on_enter(controller_api) } -> std::same_as<void>;
+  { t.on_enter(controller_api) } -> sdk19compat::same_as<void>;
 };
 
 template<typename T>
 concept HasOnLeave = requires(T &t, app_api_t controller_api) {
-  { t.on_leave(controller_api) } -> std::same_as<void>;
+  { t.on_leave(controller_api) } -> sdk19compat::same_as<void>;
 };
 
 template<typename T>
 concept HasOnKeypress = requires(T &t, app_api_t controller_api, int button) {
-  { t.on_keypress(controller_api, button) } -> std::same_as<void>;
+  { t.on_keypress(controller_api, button) } -> sdk19compat::same_as<void>;
 };
 
 template<typename T>
 concept HasOnTeardown = requires(T &t, app_api_t controller_api) {
-  { t.on_teardown(controller_api) } -> std::same_as<void>;
+  { t.on_teardown(controller_api) } -> sdk19compat::same_as<void>;
 };
 
 template<typename T>

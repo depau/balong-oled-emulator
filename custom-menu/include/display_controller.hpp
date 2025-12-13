@@ -82,7 +82,7 @@ public:
   void clay_render(const Clay_RenderCommandArray &cmds);
 
   void draw_frame(const std::span<const uint16_t> &buf) {
-    std::ranges::copy(buf, secret_screen_buf);
+    std::copy(buf.begin(), buf.end(), secret_screen_buf);
     lcd_refresh_screen(&secret_screen);
   }
 

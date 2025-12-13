@@ -90,7 +90,7 @@ void Display::paint_bw1bit(const std::span<uint16_t> &buf) {
   rgb888_buffer.reserve(LCD_WIDTH * LCD_HEIGHT);
 
   std::copy_n(gradient.begin(), offset * LCD_WIDTH, std::back_inserter(rgb888_buffer));
-  std::ranges::copy(rgb888_short_buffer, std::back_inserter(rgb888_buffer));
+  std::copy(rgb888_short_buffer.begin(), rgb888_short_buffer.end(), std::back_inserter(rgb888_buffer));
   std::copy_n(gradient.begin(),
               LCD_HEIGHT * LCD_HEIGHT - (offset + lcd_height) * LCD_WIDTH,
               std::back_inserter(rgb888_buffer));

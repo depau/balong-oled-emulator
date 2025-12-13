@@ -92,7 +92,7 @@ void display_controller::load_apps() {
     }
   }
 
-  std::ranges::sort(files, app_file_sort);
+  std::sort(files.begin(), files.end(), app_file_sort);
 
   for (const auto &file_path : files) {
     const std::string ext = file_path.extension().string();

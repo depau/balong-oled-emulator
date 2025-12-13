@@ -64,8 +64,9 @@ int call_notify_handler(const int subsystemid, const int action) {
   return hooked_notify_handler_async(subsystemid, action, 1);
 }
 
-uint32_t osa_timer_create_ex(const uint32_t time, const uint32_t repeat, void (*callback)(), uint32_t _) {
-  return display->schedule(callback, static_cast<int>(time), repeat != 0);
+uint32_t
+osa_timer_create_ex(const uint32_t time, const uint32_t repeat, void (*callback)(void *userptr), void *userptr) {
+  return display->schedule(callback, static_cast<int>(time), repeat != 0, userptr);
 }
 
 uint32_t osa_timer_delete_ex(const uint32_t timer_id) {

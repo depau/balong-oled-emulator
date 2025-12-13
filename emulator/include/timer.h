@@ -6,24 +6,23 @@ using namespace std::chrono_literals;
 
 class timer {
 public:
-  using callback_t = std::function<void()>;
+  using callback_t = std::function<void(void *userptr)>;
   using time_point = std::chrono::steady_clock::time_point;
 
 private:
   callback_t callback;
   time_point deadline = std::chrono::steady_clock::now();
   uint32_t interval = 0;
-  bool repeat = true;
+  bool repeat;
   uint32_t id = 0;
+  void *userptr = nullptr;
 
 public:
-  timer(callback_t &&callback, uint32_t interval);
-
-  timer(callback_t &&callback, uint32_t interval, bool repeat);
+  timer(callback_t &&callback, uint32_t interval, void *userptr = nullptr, bool repeat = false);
 
   [[nodiscard]] uint32_t get_id() const { return id; }
 
-  void run() const { callback(); }
+  void run() const { callback(userptr); }
 
   callback_t &get_callback() { return callback; }
 

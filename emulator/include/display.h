@@ -53,7 +53,7 @@ public:
   void set_short_screen_mode(const bool enabled);
   bool is_short_screen_mode() const { return lcd_height == LCD_HEIGHT / 2; }
 
-  uint32_t schedule(timer::callback_t &&callback, uint32_t interval, bool repeat);
+  uint32_t schedule(timer::callback_t &&callback, uint32_t interval_ms, bool repeat, void *userptr = nullptr);
   bool cancel(uint32_t timer_id);
   bool cancel_all();
 

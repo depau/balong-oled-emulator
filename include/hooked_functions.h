@@ -41,7 +41,7 @@ int NOINLINE register_notify_handler(int subsystemid,
                                      notify_handler_cb *notify_handler_async);
 int NOINLINE call_notify_handler(int subsystemid, int action);
 
-uint32_t NOINLINE osa_timer_create_ex(uint32_t time, uint32_t repeat, void (*callback)(), uint32_t _);
+uint32_t NOINLINE osa_timer_create_ex(uint32_t time, uint32_t repeat, void (*callback)(void *userptr), void *userptr);
 uint32_t NOINLINE osa_timer_delete_ex(uint32_t timer_id);
 uint32_t NOINLINE osa_get_msgQ_id(uint32_t queue_id);
 uint32_t NOINLINE osa_msgQex_send(uint32_t queue_id, uint32_t *msg, uint32_t size, uint32_t _);

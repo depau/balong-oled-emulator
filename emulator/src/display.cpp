@@ -154,9 +154,9 @@ void Display::set_brightness(const uint8_t value) {
   }
 }
 
-uint32_t Display::schedule(timer::callback_t &&callback, const uint32_t interval, const bool repeat) {
+uint32_t Display::schedule(timer::callback_t &&callback, const uint32_t interval_ms, const bool repeat, void *userptr) {
   std::scoped_lock lock(thread_mutex);
-  timers.emplace_back(std::move(callback), interval, repeat);
+  timers.emplace_back(std::move(callback), interval_ms, repeat);
   std::push_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
   return timers.back().get_id();
 }

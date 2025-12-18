@@ -14,7 +14,9 @@ target_include_directories(balong_custom_menu PRIVATE
 target_link_libraries(balong_custom_menu PRIVATE
         ui
 )
-setup_sanitizers(balong_custom_menu)
+target_compile_options(balong_custom_menu PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
+target_link_options(balong_custom_menu PRIVATE "-Wl,--exclude-libs,ALL")
+apply_common_settings(balong_custom_menu)
 
 if (DEBUG_HACK)
     target_compile_definitions(balong_custom_menu PRIVATE DEBUG_HACK=1)

@@ -4,12 +4,13 @@ project(balong_oled_emulator)
 option(ENABLE_SANITIZERS "Enable sanitizers" OFF)
 option(EMULATOR "Build the emulator" ON)
 option(DEBUG_HACK "Get debug messages from the oled executable when the custom menu library is loaded" OFF)
+option(STRIP "Strip symbols from the final binaries to reduce size" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 
 set(COMMON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-function(setup_sanitizers target)
+function(apply_common_settings target)
     if (ENABLE_SANITIZERS)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
             target_compile_options(${target} PRIVATE -fsanitize=address,undefined,leak,integer -fno-omit-frame-pointer)
@@ -17,6 +18,19 @@ function(setup_sanitizers target)
         else ()
             target_compile_options(${target} PRIVATE -fsanitize=address,undefined,leak -fno-omit-frame-pointer)
             target_link_options(${target} PRIVATE -fsanitize=address,undefined,leak)
+        endif ()
+    endif ()
+    if (STRIP)
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            add_custom_command(TARGET ${target} POST_BUILD
+                    COMMAND ${CMAKE_STRIP} --strip-unneeded $<TARGET_FILE:${target}>
+                    COMMENT "Stripping symbols from ${target}"
+            )
+        else ()
+            add_custom_command(TARGET ${target} POST_BUILD
+                    COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:${target}>
+                    COMMENT "Stripping symbols from ${target}"
+            )
         endif ()
     endif ()
 endfunction()

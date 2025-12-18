@@ -5,7 +5,7 @@ target_include_directories(hooks PRIVATE
         "${COMMON_INCLUDE_DIR}"
         include
 )
-setup_sanitizers(hooks)
+apply_common_settings(hooks)
 
 add_executable(balong_oled_emulator
         src/main.cpp
@@ -24,4 +24,4 @@ target_link_libraries(balong_oled_emulator PRIVATE
         ${FC_LIBRARIES}
         hooks
 )
-setup_sanitizers(balong_oled_emulator)
+apply_common_settings(balong_oled_emulator)

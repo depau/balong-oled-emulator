@@ -10,4 +10,4 @@ target_include_directories(ui PRIVATE
         vendor
         include
 )
-setup_sanitizers(ui)
+apply_common_settings(ui)

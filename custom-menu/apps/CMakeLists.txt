@@ -23,7 +23,7 @@ function(custom_menu_add_app order target)
             PREFIX ""
             OUTPUT_NAME "${app_filename}"
     )
-    setup_sanitizers(${target})
+    apply_common_settings(${target})
 endfunction()
 
 custom_menu_add_app(0 hello_world)

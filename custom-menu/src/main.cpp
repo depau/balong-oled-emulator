@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
@@ -13,7 +14,7 @@
 
 #define HIJACK extern "C" __attribute__((visibility("default"), noinline))
 
-display_controller screen_controller{};
+std::unique_ptr<display_controller> screen_controller;
 
 int (*notify_handler_async_real)(int subsystemid, int action, int subaction) = nullptr;
 void (*lcd_refresh_screen_real)(const lcd_screen *screen) = nullptr;
@@ -23,8 +24,9 @@ uint32_t (*get_msgQ_id)(uint32_t) = nullptr;
 uint32_t (*msgQex_send)(uint32_t, uint32_t *, uint32_t, uint32_t) = nullptr;
 
 HIJACK int lcd_control_operate(const int lcd_mode) {
+  assert(screen_controller != nullptr && "Screen controller is null");
   // we use other values in secret mode to have full control on lcd
-  if (screen_controller.active()) {
+  if (screen_controller->active()) {
     if (lcd_mode < 100)
       return 0;
     return lcd_control_operate_real(lcd_mode - 100);
@@ -35,17 +37,18 @@ HIJACK int lcd_control_operate(const int lcd_mode) {
 }
 
 HIJACK void lcd_refresh_screen(const lcd_screen *screen) {
+  assert(screen_controller != nullptr && "Screen controller is null");
   // Ignore our screen's refreshes when the original screen is active
-  if (!screen_controller.active() && screen_controller.is_own_screen(screen)) {
+  if (!screen_controller->active() && screen_controller->is_own_screen(screen)) {
     return;
   }
   // Ignore original screen refreshes when our screen is active
-  if (screen_controller.active() && !screen_controller.is_own_screen(screen)) {
+  if (screen_controller->active() && !screen_controller->is_own_screen(screen)) {
     return;
   }
   // Detect and report small display devices
-  if (!screen_controller.active() && screen && screen->buf_len == 1024) {
-    screen_controller.switch_to_small_screen_mode();
+  if (!screen_controller->active() && screen && screen->buf_len == 1024) {
+    screen_controller->switch_to_small_screen_mode();
   }
   // If everything's good, actually perform the refresh
   lcd_refresh_screen_real(screen);
@@ -68,14 +71,15 @@ static void send_msg(const uint32_t msg_type) {
  * The main hijacked handler function.
  */
 int notify_handler_async(int subsystemid, int action, int subaction) {
+  assert(screen_controller != nullptr && "Screen controller is null");
   std::cout << "notify_handler_async: " << subsystemid << ", " << action << ", " << subaction << std::endl;
 
   if (subsystemid == SUBSYSTEM_GPIO) {
     if (action == BUTTON_LONGMENU) {
-      screen_controller.set_active(!screen_controller.active());
+      screen_controller->set_active(!screen_controller->active());
       send_msg(UI_MENU_EXIT);
       // force restarting the LED brightness timer if already fired
-      if (!screen_controller.is_small_screen()) {
+      if (!screen_controller->is_small_screen()) {
         notify_handler_async_real(SUBSYSTEM_GPIO, BUTTON_POWER, 0);
       } else {
         notify_handler_async_real(SUBSYSTEM_GPIO, BUTTON_MENU, 0);
@@ -84,8 +88,8 @@ int notify_handler_async(int subsystemid, int action, int subaction) {
       return 0;
     }
 
-    if (screen_controller.active() && (action == BUTTON_MENU || action == BUTTON_POWER)) {
-      screen_controller.on_keypress(action);
+    if (screen_controller->active() && (action == BUTTON_MENU || action == BUTTON_POWER)) {
+      screen_controller->on_keypress(action);
       return 0;
     }
   }
@@ -97,6 +101,11 @@ HIJACK int
 register_notify_handler(int subsystemid, void *notify_handler_sync, notify_handler_cb *notify_handler_async_orig) {
   std::cout << "register_notify_handler: " << subsystemid << " - hooked" << std::endl;
   unsetenv("LD_PRELOAD");
+
+  if (screen_controller == nullptr) {
+    std::cout << "Initializing display controller" << std::endl;
+    screen_controller = std::make_unique<display_controller>();
+  }
 
   static int (*register_notify_handler_real)(int, void *, void *) = nullptr;
   register_notify_handler_real = reinterpret_cast<int (*)(int, void *, void *)>(

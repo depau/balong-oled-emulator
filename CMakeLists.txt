@@ -3,6 +3,7 @@ project(balong_oled_emulator)
 
 option(ENABLE_SANITIZERS "Enable sanitizers" OFF)
 option(EMULATOR "Build the emulator" ON)
+option(DEBUG_MESSAGES "Enable debug messages" OFF)
 option(DEBUG_HACK "Get debug messages from the oled executable when the custom menu library is loaded" OFF)
 option(STRIP "Strip symbols from the final binaries to reduce size" ON)
 
@@ -32,6 +33,9 @@ function(apply_common_settings target)
                     COMMENT "Stripping symbols from ${target}"
             )
         endif ()
+    endif ()
+    if (DEBUG_MESSAGES)
+        target_compile_definitions(${target} PRIVATE DEBUG=1)
     endif ()
 endfunction()
 

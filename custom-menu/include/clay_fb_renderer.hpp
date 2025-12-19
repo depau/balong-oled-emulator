@@ -6,8 +6,6 @@
 #include <vector>
 
 #include "clay.hpp"
-
-#define DEBUG
 #include "debug.h"
 
 #define bswap16(x) __builtin_bswap16(x)

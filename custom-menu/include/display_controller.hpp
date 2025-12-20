@@ -75,12 +75,12 @@ public:
   ~display_controller();
 
   // Forbid copying
-  display_controller(const display_controller &) = delete;
   display_controller &operator=(const display_controller &) = delete;
+  display_controller(const display_controller &) = delete;
 
-  // Allow moving
-  display_controller(display_controller &&) = default;
-  display_controller &operator=(display_controller &&) = default;
+  // Forbid moving
+  display_controller &operator=(display_controller &&) = delete;
+  display_controller(display_controller &&) = delete;
 
   // ReSharper disable once CppMemberFunctionMayBeStatic
   // NOLINTNEXTLINE(*-convert-member-functions-to-static)

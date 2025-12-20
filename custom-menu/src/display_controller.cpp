@@ -196,6 +196,17 @@ void display_controller::set_active(const bool active) {
     set_active_app(0);
   }
   is_active = active;
+
+  schedule_timer(
+    [this]() {
+      if (is_active && active_app_index.has_value()) {
+        auto &[descriptor, userptr] = apps[active_app_index.value()];
+        if (descriptor.on_enter) {
+          descriptor.on_enter(userptr, this);
+        }
+      }
+    },
+    16);
 }
 
 void display_controller::switch_to_small_screen_mode() {

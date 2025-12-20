@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 
+#include "debug.h"
 #include "display.h"
 #include "hooked_functions.h"
 #include "hooks.h"
@@ -66,6 +67,11 @@ int call_notify_handler(const int subsystemid, const int action) {
 
 uint32_t
 osa_timer_create_ex(const uint32_t time, const uint32_t repeat, void (*callback)(void *userptr), void *userptr) {
+  debugf("emulator: osa_timer_create_ex: time=%u, repeat=%u, callback=%p, userptr=%p\n",
+         time,
+         repeat,
+         reinterpret_cast<void *>(callback),
+         userptr);
   return display->schedule(callback, static_cast<int>(time), repeat != 0, userptr);
 }
 

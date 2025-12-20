@@ -13,11 +13,12 @@
 #include "clay_fb_renderer.hpp"
 #include "fonts/poppins_12.hpp"
 #include "hooked_functions.h"
+#include "stdfn_timer_helper.hpp"
 
 DECLARE_FN_TYPE(app_register_fn_t, app_descriptor_t *, app_api_t controller_api, void **userptr);
-
 class display_controller : display_controller_api {
   friend class main_menu_app;
+  friend class stdfn_timer_helper<display_controller>;
 
   using app_loader_desc_t = std::pair<app_loader_callback_fn_t, void *>;
 
@@ -52,14 +53,22 @@ class display_controller : display_controller_api {
 
   std::optional<std::string> app_error_message = std::nullopt;
 
+  std::mutex stdfn_timer_mutex;
+  std::map<uint32_t, stdfn_timer_helper<display_controller>> scheduled_stdfn_timers{};
+  std::map<uint32_t, uint32_t> scheduled_stdfn_timer_ids{};
+  uint32_t next_stdfn_timer_id = 1;
+
   bool is_small_screen_mode = false;
   bool is_active = false;
 
+  // Private methods
   static std::vector<std::string> get_app_lookup_paths();
 
   void load_apps();
 
   void set_active_app(std::optional<size_t> app_index);
+
+  void gc_stdfn_timer(uint32_t stdfn_timer_id);
 
 public:
   display_controller();
@@ -95,7 +104,7 @@ public:
 
   [[nodiscard]] std::optional<uint16_t> get_font(const std::string &fontName, int fontSize) const;
 
-  void set_active(const bool active);
+  void set_active(bool active);
 
   void switch_to_small_screen_mode();
 
@@ -111,6 +120,8 @@ public:
   void goto_main_menu();
 
   void fatal_error(const char *message, bool unload_app);
+
+  uint32_t schedule_timer(std::function<void()> &&callback, uint32_t interval_ms, bool repeat = false);
 
   uint32_t
   schedule_timer(void (*callback)(void *userptr), uint32_t interval_ms, bool repeat = false, void *userptr = nullptr);

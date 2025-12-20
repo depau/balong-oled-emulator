@@ -1,9 +1,11 @@
+#include <cassert>
 #include <chrono>
 #include <iostream>
 #include <mutex>
 #include <span>
 #include <vector>
 
+#include "debug.h"
 #include "display.h"
 #include "hooked_functions.h"
 #include "hooks.h"
@@ -155,14 +157,21 @@ void Display::set_brightness(const uint8_t value) {
 }
 
 uint32_t Display::schedule(timer::callback_t &&callback, const uint32_t interval_ms, const bool repeat, void *userptr) {
-  std::scoped_lock lock(thread_mutex);
+  std::scoped_lock lock(timers_mutex);
   timers.emplace_back(std::move(callback), interval_ms, userptr, repeat);
+  const timer &new_timer = timers.back();
   std::push_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
-  return timers.back().get_id();
+  debugf("emulator: scheduling timer: timer_id=%u, interval_ms=%u, repeat=%d\n",
+         new_timer.get_id(),
+         interval_ms,
+         repeat);
+  debugf("emulator: new front timer: timer_id=%u, size=%zu\n", timers.front().get_id(), timers.size());
+  return new_timer.get_id();
 }
 
 bool Display::cancel(const uint32_t timer_id) {
-  std::scoped_lock lock(thread_mutex);
+  std::scoped_lock lock(timers_mutex);
+  debugf("emulator: cancelling timer: timer_id=%u, size=%zu\n", timer_id, timers.size());
   for (auto it = timers.begin(); it != timers.end(); ++it) {
     if (it->get_id() == timer_id) {
       timers.erase(it);
@@ -174,12 +183,13 @@ bool Display::cancel(const uint32_t timer_id) {
 }
 
 bool Display::cancel_all() {
-  std::scoped_lock lock(thread_mutex);
+  std::scoped_lock lock(timers_mutex);
+  debugf("emulator: cancelling all timers: size=%zu\n", timers.size());
   timers.clear();
   return true;
 }
 
-void Display::dispatch_button(const int button_id, bool use_timer) {
+void Display::dispatch_button(const int button_id) {
   std::vector<uint32_t> rgb888_buf(LCD_WIDTH * LCD_HEIGHT);
 
   std::string text;
@@ -208,33 +218,38 @@ void Display::dispatch_button(const int button_id, bool use_timer) {
   draw_text(rgb888_buf, LCD_WIDTH, LCD_HEIGHT, text, font);
 
   paint_rgb888(rgb888_buf);
-
-  if (use_timer)
-    schedule([&](void *) { reset_display(); }, 500, false);
 }
 
 void Display::timer_thread_loop() {
+  debugf("emulator: timer thread started\n");
   set_thread_name("oled_timer");
   while (running) {
-    std::unique_lock lock(thread_mutex);
+    {
+      std::unique_lock lock(timers_mutex);
 
-    while (!timers.empty() && timers.front().is_expired()) {
-      auto &t = timers.front();
+      while (!timers.empty() && timers.front().is_expired()) {
+        auto &t = timers.front();
+        debugf("emulator: timer expired: timer_id=%u, size=%zu\n", t.get_id(), timers.size());
 
-      lock.unlock();
-      t.run();
-      lock.lock();
+        if (t.should_repeat()) {
+          t.reset();
+          std::make_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
 
-      if (t.should_repeat()) {
-        t.reset();
-        std::make_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
-      } else {
-        std::pop_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
-        timers.pop_back();
+          lock.unlock();
+          t.run();
+          lock.lock();
+        } else {
+          std::pop_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
+          auto to_run = std::move(t);
+          timers.pop_back();
+          debugf("emulator: removing non-repeating timer: timer_id=%u, size=%zu\n", t.get_id(), timers.size());
+
+          lock.unlock();
+          to_run.run();
+          lock.lock();
+        }
       }
     }
-
-    lock.unlock();
 
     if (!running)
       return;

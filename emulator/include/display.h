@@ -21,7 +21,7 @@ class Display {
 
   void timer_thread_loop();
   std::atomic_bool running = true;
-  mutable std::mutex thread_mutex;
+  mutable std::mutex timers_mutex;
   std::thread timer_thread;
   std::vector<timer> timers;
 

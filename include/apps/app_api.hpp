@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <optional>
 #include <span>
 #include <utility>
@@ -93,7 +94,7 @@ struct display_controller_api {
    * Register an app loader for a specific file extension
    *
    * @param file_extension The file extension to register (including the dot, e.g. ".so")
-   * @param loader_fn The loader function to call when loading a app with the specified extension
+   * @param loader_fn The loader function to call when loading an app with the specified extension
    * @param userptr A user pointer to pass to the loader function
    */
   void register_app_loader(const char *file_extension, const app_loader_callback_fn_t loader_fn, void *userptr) {
@@ -109,7 +110,7 @@ struct display_controller_api {
    * @param userptr A user pointer to pass to the callback function
    * @return The timer ID
    */
-  uint32_t schedule_timer(uint32_t time, uint32_t repeat, void (*callback)(void *userptr), void *userptr) {
+  uint32_t schedule_timer(const uint32_t time, const uint32_t repeat, void (*callback)(void *userptr), void *userptr) {
     return app_api_schedule_timer(this, time, repeat, callback, userptr);
   }
 
@@ -241,7 +242,7 @@ consteval app_on_keypress_fn_t get_on_keypress_ptr() {
                         _##_class##__setup,                                               \
                         _##_class##__teardown,                                            \
                         get_on_enter_ptr<_class>(),                                       \
-                        get_on_leave_ptr<_class>(),                                        \
+                        get_on_leave_ptr<_class>(),                                       \
                         get_on_keypress_ptr<_class>())
 
 /**

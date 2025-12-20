@@ -70,8 +70,12 @@ DECLARE_FN_TYPE(app_on_keypress_fn_t, void, void *userptr, app_api_t controller_
 /**
  * Handle app focus event
  *
- * Called by the display controller when this app becomes active. The app should start rendering itself.
- * If not provided, the controller assumes this is a "back-end" app that does not render any UI.
+ * Called by the display controller when this app becomes active. The app must render itself when this function is
+ * called, and set up any scheduled rendering ticks. If not provided, the controller assumes this is a "back-end" app
+ * that does not render any UI.
+ *
+ * This function may be called multiple times in a row, for instance when returning to the app after waking up from
+ * sleep mode. The app must be prepared to handle that and not re-initialize resources that are already initialized.
  *
  * @param userptr The user pointer returned by the setup function
  * @param controller_api The controller API object
@@ -81,7 +85,8 @@ DECLARE_FN_TYPE(app_on_enter_fn_t, void, void *userptr, app_api_t controller_api
 /**
  * Handle app blur event
  *
- * Called by the display controller when this app is no longer active. The app should stop rendering itself.
+ * Called by the display controller when this app is no longer active. The app must stop rendering itself and cancel
+ * any scheduled events when this function is called.
  * "Back-end" apps that do not render any UI don't need to implement this function as it will never be called.
  *
  * @param userptr The user pointer returned by the setup function
@@ -117,7 +122,7 @@ DECLARE_FN_TYPE(app_setup_fn_t, void *, app_api_t controller_api);
   typedef void fake_typedef_to_enforce_semicolon_after_macro
 
 /**
- * Declare a app.
+ * Declare an app.
  *
  * C apps must use this macro to declare their app.
  *
@@ -136,7 +141,7 @@ DECLARE_FN_TYPE(app_setup_fn_t, void *, app_api_t controller_api);
 /**
  * App loader callback type
  *
- * Called when loading a app that matches the registered filename extension. The app loader should
+ * Called when loading an app that matches the registered filename extension. The app loader should
  * set up/initialize the loaded app, forwarding any user pointer as needed.
  *
  * @param userptr The user pointer provided when registering the loader
@@ -228,7 +233,7 @@ void app_api_fatal_error(app_api_t controller_api, const char *message, bool unl
  *
  * @param controller_api The controller API object
  * @param file_extension The file extension to register (including the dot, e.g. ".so")
- * @param loader_fn The loader function to call when loading a app with the specified extension
+ * @param loader_fn The loader function to call when loading an app with the specified extension
  * @param userptr A user pointer to pass to the loader function
  */
 void app_api_register_app_loader(app_api_t controller_api,

@@ -57,7 +57,7 @@ public:
   bool cancel(uint32_t timer_id);
   bool cancel_all();
 
-  void dispatch_button(int button_id, bool use_timer = false);
+  void dispatch_button(int button_id);
 
   void loop();
   void run_forever();

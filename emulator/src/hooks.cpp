@@ -20,7 +20,7 @@ Display &get_display() {
 
 static int notify_handler(const int subsystemid, const int action, int subaction) {
   assert(subsystemid == SUBSYSTEM_GPIO && "Unrecognised subsystem");
-  display->dispatch_button(action, subaction == 1);
+  display->dispatch_button(action);
   return 0;
 }
 
@@ -81,7 +81,6 @@ uint32_t osa_msgQex_send(uint32_t queue, uint32_t *msg, uint32_t len, uint32_t) 
   assert(len = 2 * sizeof(uint32_t));
   if (msg[0] == UI_MENU_EXIT) {
     std::cout << "Got UI_MENU_EXIT message" << std::endl;
-    display->cancel_all();
     // Trigger callback to hijack
     call_notify_handler(SUBSYSTEM_GPIO, BUTTON_LONGPOWER);
   } else {

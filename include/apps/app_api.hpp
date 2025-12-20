@@ -6,6 +6,15 @@
 
 #include "app_api.h"
 
+namespace priv_api {
+
+uint32_t app_api_schedule_stdfn_timer(app_api_t controller_api,
+                                      uint32_t time,
+                                      uint32_t repeat,
+                                      std::function<void()> &&callback);
+
+}
+
 struct display_controller_api {
   /**
    * Get the current display mode
@@ -102,6 +111,18 @@ struct display_controller_api {
    */
   uint32_t schedule_timer(uint32_t time, uint32_t repeat, void (*callback)(void *userptr), void *userptr) {
     return app_api_schedule_timer(this, time, repeat, callback, userptr);
+  }
+
+  /**
+   * Register a timer callback
+   *
+   * @param time Time in milliseconds until the timer fires
+   * @param repeat Whether the timer should repeat
+   * @param callback The callback function to call when the timer fires
+   * @return The timer ID
+   */
+  uint32_t schedule_timer(const uint32_t time, const uint32_t repeat, std::function<void()> &&callback) {
+    return priv_api::app_api_schedule_stdfn_timer(this, time, repeat, std::move(callback));
   }
 
   /**

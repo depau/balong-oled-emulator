@@ -60,6 +60,15 @@ uint32_t app_api_schedule_timer(app_api_t controller_api,
   return get_display_controller(controller_api).schedule_timer(callback, time, repeat != 0, userptr);
 }
 
+namespace priv_api {
+uint32_t app_api_schedule_stdfn_timer(app_api_t controller_api,
+                                      const uint32_t time,
+                                      const uint32_t repeat,
+                                      std::function<void()> &&callback) {
+  return get_display_controller(controller_api).schedule_timer(std::move(callback), time, repeat != 0);
+}
+} // namespace priv_api
+
 uint32_t app_api_cancel_timer(app_api_t controller_api, const uint32_t timer_id) {
   return get_display_controller(controller_api).cancel_timer(timer_id);
 }

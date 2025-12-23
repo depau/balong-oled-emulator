@@ -51,7 +51,7 @@ struct BitmapFont {
     std::int32_t maxWidth = 0;
     std::int32_t lines = 1;
 
-    const std::int32_t lineHeight = ascent - descent + lineGap;
+    const std::int32_t lineHeight = ascent - descent;
 
     for (const char ch : text) {
       if (ch == '\n') {
@@ -65,7 +65,7 @@ struct BitmapFont {
     }
 
     maxWidth = std::max(maxWidth, lineWidth);
-    return TextMetrics{ maxWidth, lines * lineHeight };
+    return TextMetrics{ maxWidth, lines * lineHeight + (lines - 1) * lineGap};
   }
 };
 
@@ -217,7 +217,7 @@ protected:
     const int lineHeight = font.ascent - font.descent + font.lineGap;
 
     const int x = bb.x;
-    const int y = bb.y + font.size; // baseline
+    const int y = bb.y + font.ascent; // baseline
 
     std::uint16_t color = pack_bgr565(tdata.textColor);
 

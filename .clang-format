@@ -123,6 +123,7 @@ PenaltyReturnTypeOnItsOwnLine: 0
 PenaltyIndentedWhitespace: 0
 PointerAlignment: Right
 ReflowComments: true
+SkipMacroDefinitionBody: false
 SortIncludes: true
 SortJavaStaticImport: Before
 SortUsingDeclarations: true
@@ -152,3 +153,4 @@ Standard: Latest
 TabWidth: 2
 UseCRLF: false
 UseTab: Never
+WhitespaceSensitiveMacros: [ STRINGIZE, PP_STRINGIZE, STRINGIFY, _STRINGIFY ]

@@ -4,6 +4,7 @@
 #include "apps/app_api.hpp"
 #include "display_controller.hpp"
 #include "main_menu.hpp"
+#include "symbols.h"
 #include "ui/actions/button.hpp"
 
 _DECLARE_CPP_APP_INTERNAL(register_main_menu_app, main_menu_app_descriptor, "Main Menu", main_menu_app);
@@ -14,7 +15,7 @@ main_menu_app::main_menu_app(const app_api_t controller_api) : session(*controll
 
 void main_menu_app::load_app_actions(display_controller &controller) {
   actions.clear();
-  actions.emplace_back(std::make_unique<ui::actions::button>("Back", [&controller, this] {
+  actions.emplace_back(std::make_unique<ui::actions::button>(GLYPH_ARROW_BACK " Back", [&controller, this] {
     controller.set_active(false);
     menu_screen->set_active_entry(0);
   }));

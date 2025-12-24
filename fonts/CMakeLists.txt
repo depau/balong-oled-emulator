@@ -9,6 +9,7 @@ add_custom_command(
         DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/generate_bitmap_font.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/Poppins-Regular.ttf"
+        "${CMAKE_CURRENT_SOURCE_DIR}/MaterialSymbolsSharp-Regular.ttf"
         "${CMAKE_CURRENT_SOURCE_DIR}/MaterialSymbolsSharp_Filled-Regular.ttf"
         "${CMAKE_CURRENT_SOURCE_DIR}/glyph_overrides.yaml"
         COMMENT "Generating bitmap font header poppins_12.hpp"

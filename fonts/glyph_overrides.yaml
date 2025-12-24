@@ -1,70 +1,76 @@
 sources:
-  MaterialSymbols:
+  MaterialSymbolsSharp:
+    ttf:
+      file: MaterialSymbolsSharp-Regular.ttf
+      size: 12
+      verticalOffset: 2
+  MaterialSymbolsSharpFilled:
     ttf:
       file: MaterialSymbolsSharp_Filled-Regular.ttf
       size: 12
       verticalOffset: 2
 
+
 overrides:
   - name: ARROW_BACK
     target: 0x01
     replacement: 0xE5C4  # Arrow Back
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
 
   - name: POWER_BUTTON
     target: 0x02
     replacement: 0xE8AC  # Power Settings New
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
     verticalOffset: 1
 
   - name: MENU
     target: 0x03
     replacement: 0xE5D3  # More Horiz
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
 
   - name: CARET_DOWN
     target: 0x04
     replacement: 0xE5C5  # Arrow Drop Down
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
 
   - name: CARET_UP
     target: 0x05
     replacement: 0xE5C7  # Arrow Drop Up
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
 
   - name: CHECKBOX_UNCHECKED
     target: 0x06
     replacement: 0xE835  # Check Box Outline Blank
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
 
   - name: CHECKBOX_CHECKED
     target: 0x07
     replacement: 0xE834  # Check Box
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
 
   - name: RADIO_BUTTON_UNCHECKED
     target: 0x08
     replacement: 0xE836  # Radio Button Unchecked
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
     verticalOffset: 1
 
   - name: RADIO_BUTTON_CHECKED
     target: 0x09
     replacement: 0xE837  # Radio Button Checked
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled
     verticalOffset: 1
 
   - name: TOGGLE_OFF
     target: 0x0A
     replacement: 0xE9F5  # Toggle Off
-    source: MaterialSymbols
+    source: MaterialSymbolsSharp
 
   - name: TOGGLE_ON
     target: 0x0B
     replacement: 0xE9F6  # Toggle On
-    source: MaterialSymbols
+    source: MaterialSymbolsSharp
 
   - name: REFRESH
     target: 0x0C
     replacement: 0xE5D5  # Refresh
-    source: MaterialSymbols
+    source: MaterialSymbolsSharpFilled

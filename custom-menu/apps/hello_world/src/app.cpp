@@ -80,4 +80,4 @@ public:
   }
 };
 
-DECLARE_CPP_APP("Hello World porcodio", hello_world_app);
+DECLARE_CPP_APP("Hello World", hello_world_app);

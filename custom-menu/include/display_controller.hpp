@@ -24,6 +24,8 @@ class display_controller : display_controller_api {
 
   uint32_t (*timer_create_ex)(uint32_t, uint32_t, void (*)(void *), void *);
   uint32_t (*timer_delete_ex)(uint32_t);
+  uint32_t (*get_msgQ_id)(uint32_t);
+  uint32_t (*msgQex_send)(uint32_t, uint32_t *, uint32_t, uint32_t);
 
   uint16_t secret_screen_buf[LCD_WIDTH * LCD_HEIGHT]{};
   lcd_screen secret_screen{ .sx = 1,
@@ -69,6 +71,8 @@ class display_controller : display_controller_api {
   void set_active_app(std::optional<size_t> app_index);
 
   void gc_stdfn_timer(uint32_t stdfn_timer_id);
+
+  void send_msg(const uint32_t msg_type) const;
 
 public:
   display_controller();

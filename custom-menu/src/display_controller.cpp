@@ -39,8 +39,13 @@ display_controller::display_controller() {
   timer_create_ex = reinterpret_cast<uint32_t (*)(uint32_t, uint32_t, void (*)(void *), void *)>(
     dlsym(RTLD_DEFAULT, "osa_timer_create_ex"));
   timer_delete_ex = reinterpret_cast<uint32_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "osa_timer_delete_ex"));
+  get_msgQ_id = reinterpret_cast<uint32_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "osa_get_msgQ_id"));
+  msgQex_send = reinterpret_cast<uint32_t (*)(uint32_t, uint32_t *, uint32_t, uint32_t)>(
+    dlsym(RTLD_DEFAULT, "osa_msgQex_send"));
   assert(timer_create_ex != nullptr && "Failed to locate osa_timer_create_ex");
   assert(timer_delete_ex != nullptr && "Failed to locate osa_timer_delete_ex");
+  assert(get_msgQ_id != nullptr && "Failed to locate osa_get_msgQ_id");
+  assert(msgQex_send != nullptr && "Failed to locate osa_msgQex_send");
 
   Clay_Initialize(arena, Clay_Dimensions{ 128, 128 }, errHandler);
   Clay_SetMeasureTextFunction(&ClayMeasureText, this);
@@ -186,6 +191,19 @@ std::optional<uint16_t> display_controller::get_font(const std::string &fontName
   return std::nullopt;
 }
 
+// ReSharper disable once CppDFAConstantParameter
+void display_controller::send_msg(const uint32_t msg_type) const {
+  constexpr int DEFAULT_QUEUE_ID = 1001;
+
+  const uint32_t msg_queue = get_msgQ_id(DEFAULT_QUEUE_ID);
+  if (!msg_queue) {
+    fprintf(stderr, "Failed to get message queue to close the menu\n");
+    return;
+  }
+  uint32_t msg[2] = { msg_type, 0 };
+  msgQex_send(msg_queue, msg, 2 * sizeof(uint32_t), 0);
+}
+
 void display_controller::set_active(const bool active) {
   if (active == is_active)
     return;
@@ -207,6 +225,8 @@ void display_controller::set_active(const bool active) {
       }
     },
     16);
+
+  send_msg(UI_MENU_EXIT);
 }
 
 void display_controller::switch_to_small_screen_mode() {

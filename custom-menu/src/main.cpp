@@ -20,9 +20,6 @@ int (*notify_handler_async_real)(int subsystemid, int action, int subaction) = n
 void (*lcd_refresh_screen_real)(const lcd_screen *screen) = nullptr;
 int (*lcd_control_operate_real)(int lcd_mode) = nullptr;
 
-uint32_t (*get_msgQ_id)(uint32_t) = nullptr;
-uint32_t (*msgQex_send)(uint32_t, uint32_t *, uint32_t, uint32_t) = nullptr;
-
 HIJACK int lcd_control_operate(const int lcd_mode) {
   assert(screen_controller != nullptr && "Screen controller is null");
   // we use other values in secret mode to have full control on lcd
@@ -54,19 +51,6 @@ HIJACK void lcd_refresh_screen(const lcd_screen *screen) {
   lcd_refresh_screen_real(screen);
 }
 
-// ReSharper disable once CppDFAConstantParameter
-static void send_msg(const uint32_t msg_type) {
-  constexpr int DEFAULT_QUEUE_ID = 1001;
-
-  const uint32_t msg_queue = get_msgQ_id(DEFAULT_QUEUE_ID);
-  if (!msg_queue) {
-    fprintf(stderr, "Failed to get message queue to close the menu\n");
-    return;
-  }
-  uint32_t msg[2] = { msg_type, 0 };
-  msgQex_send(msg_queue, msg, 2 * sizeof(uint32_t), 0);
-}
-
 /*
  * The main hijacked handler function.
  */
@@ -77,7 +61,6 @@ int notify_handler_async(int subsystemid, int action, int subaction) {
   if (subsystemid == SUBSYSTEM_GPIO) {
     if (action == BUTTON_LONGMENU) {
       screen_controller->set_active(!screen_controller->active());
-      send_msg(UI_MENU_EXIT);
       // force restarting the LED brightness timer if already fired
       if (!screen_controller->is_small_screen()) {
         notify_handler_async_real(SUBSYSTEM_GPIO, BUTTON_POWER, 0);
@@ -114,12 +97,7 @@ register_notify_handler(int subsystemid, void *notify_handler_sync, notify_handl
     dlsym(RTLD_NEXT, "lcd_refresh_screen"));
   lcd_control_operate_real = reinterpret_cast<int (*)(int lcd_mode)>(dlsym(RTLD_NEXT, "lcd_control_operate"));
 
-  get_msgQ_id = reinterpret_cast<uint32_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "osa_get_msgQ_id"));
-  msgQex_send = reinterpret_cast<uint32_t (*)(uint32_t, uint32_t *, uint32_t, uint32_t)>(
-    dlsym(RTLD_DEFAULT, "osa_msgQex_send"));
-
-  if (!register_notify_handler_real || !lcd_refresh_screen_real || !lcd_control_operate_real || !get_msgQ_id ||
-      !msgQex_send) {
+  if (!register_notify_handler_real || !lcd_refresh_screen_real || !lcd_control_operate_real) {
     std::cout << "The program is not compatible with this device" << std::endl;
     return 1;
   }

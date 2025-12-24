@@ -15,7 +15,7 @@
         .childGap = ROOT_PADDING,                                             \
         .layoutDirection = _dir,                                              \
     },                                                                        \
-    .backgroundColor = theme::COLOR_SURFACE,                                  \
+    .backgroundColor = ui::theme::COLOR_SURFACE,                              \
   })
 
 #define BOUNDING_BOX \
@@ -26,10 +26,10 @@
     .backgroundColor = (Clay_Color) { 0, 0, 0, 0 }, \
     .border = (Clay_BorderElementConfig) { \
       .color = (Clay_Color) { 255, 0, 0, 255 }, \
-      .width = { theme::BORDER_ACTIVE_PX, \
-                 theme::BORDER_ACTIVE_PX, \
-                 theme::BORDER_ACTIVE_PX, \
-                 theme::BORDER_ACTIVE_PX, \
+      .width = { ui::theme::BORDER_ACTIVE_PX, \
+                 ui::theme::BORDER_ACTIVE_PX, \
+                 ui::theme::BORDER_ACTIVE_PX, \
+                 ui::theme::BORDER_ACTIVE_PX, \
                  0 }, \
     } \
   })

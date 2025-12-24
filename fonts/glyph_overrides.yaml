@@ -12,7 +12,7 @@ overrides:
 
   - name: POWER_BUTTON
     target: 0x02
-    replacement: 0xF418  # Power Settings Circle
+    replacement: 0xE8AC  # Power Settings New
     source: MaterialSymbols
 
   - name: MENU

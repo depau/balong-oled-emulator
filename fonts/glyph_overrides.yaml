@@ -1,0 +1,66 @@
+sources:
+  MaterialSymbols:
+    ttf:
+      file: MaterialSymbolsSharp_Filled-Regular.ttf
+      size: 12
+
+overrides:
+  - name: ARROW_BACK
+    target: 0x01
+    replacement: 0xE5C4  # Arrow Back
+    source: MaterialSymbols
+
+  - name: POWER_BUTTON
+    target: 0x02
+    replacement: 0xF418  # Power Settings Circle
+    source: MaterialSymbols
+
+  - name: MENU
+    target: 0x03
+    replacement: 0xE5D3  # More Horiz
+    source: MaterialSymbols
+
+  - name: CARET_DOWN
+    target: 0x04
+    replacement: 0xE5C5  # Arrow Drop Down
+    source: MaterialSymbols
+
+  - name: CARET_UP
+    target: 0x05
+    replacement: 0xE5C7  # Arrow Drop Up
+    source: MaterialSymbols
+
+  - name: CHECKBOX_UNCHECKED
+    target: 0x06
+    replacement: 0xE835  # Check Box Outline Blank
+    source: MaterialSymbols
+
+  - name: CHECKBOX_CHECKED
+    target: 0x07
+    replacement: 0xE834  # Check Box
+    source: MaterialSymbols
+
+  - name: RADIO_BUTTON_UNCHECKED
+    target: 0x08
+    replacement: 0xE836  # Radio Button Unchecked
+    source: MaterialSymbols
+
+  - name: RADIO_BUTTON_CHECKED
+    target: 0x09
+    replacement: 0xE837  # Radio Button Checked
+    source: MaterialSymbols
+
+  - name: TOGGLE_OFF
+    target: 0x0A
+    replacement: 0xF35E  # Toggle Off
+    source: MaterialSymbols
+
+  - name: TOGGLE_ON
+    target: 0x0B
+    replacement: 0xF35F  # Toggle On
+    source: MaterialSymbols
+
+  - name: REFRESH
+    target: 0x0C
+    replacement: 0xE5D5  # Refresh
+    source: MaterialSymbols

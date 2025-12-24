@@ -2,8 +2,10 @@
 
 import argparse
 import subprocess
+import warnings
 from pathlib import Path
 
+import yaml
 from PIL import ImageFont
 
 
@@ -11,14 +13,45 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("font", type=Path, help="TTF/OTF font file")
     parser.add_argument("size", type=int, help="Font pixel size")
-    parser.add_argument("out", type=Path, help="Output header path")
-    parser.add_argument("--name", default="MyFont", help="Base C++ identifier for the font")
-    parser.add_argument("--replacement-char", default="□", help="Glyph used for control chars (ASCII < 32 or 127)")
+    parser.add_argument("-o", "--output", type=Path, help="Output header path")
+    parser.add_argument(
+        "--name", default="MyFont", help="Base C++ identifier for the font"
+    )
+    parser.add_argument(
+        "--replacement-char",
+        default="□",
+        help="Glyph used for control chars (ASCII < 32 or 127)",
+    )
+    parser.add_argument("--overrides", type=Path, help="Path to glyph_overrides.yaml")
+    parser.add_argument(
+        "--glyphs-header", type=Path, help="Path to output glyph names header"
+    )
     args = parser.parse_args()
 
     font = ImageFont.truetype(str(args.font), args.size)
     ascent, descent = font.getmetrics()
     line_gap = int(args.size * 0.2)
+
+    overrides_map = {}
+    if args.overrides:
+        with args.overrides.open("r", encoding="utf-8") as f:
+            overrides_data = yaml.safe_load(f)
+
+        source_fonts = {}
+        for src_name, src_cfg in overrides_data.get("sources", {}).items():
+            src_path = args.overrides.parent / src_cfg["ttf"]["file"]
+            source_fonts[src_name] = ImageFont.truetype(
+                str(src_path), src_cfg["ttf"]["size"]
+            )
+
+        for ov in overrides_data.get("overrides", []):
+            if chr(ov["target"]).isprintable():
+                warnings.warn(f"Overriding printable character {ov['target']} ({chr(ov['target'])})")
+            overrides_map[ov["target"]] = {
+                "name": ov["name"],
+                "replacement": ov["replacement"],
+                "font": source_fonts[ov["source"]],
+            }
 
     # Pre-render replacement glyph once
     rep_char = args.replacement_char
@@ -31,19 +64,26 @@ def main():
     # We keep a memo to reuse identical bitmaps (e.g. control codes)
     bitmap_cache = {}
 
-    def render_char(ch: str):
+    def render_char(ch: str, font_to_use=font):
         # First, detect whitespace / empty glyphs using a simple mask
-        raw_mask = font.getmask(ch, mode="L")
+        raw_mask = font_to_use.getmask(ch, mode="L")
         if not raw_mask.getbbox():
             # whitespace or non-drawing glyph
-            return {"comment": ch.isprintable() and ch or f"#{ord(ch):02X}", "width": 0, "height": 0, "bearingX": 0,
-                "bearingY": 0, "advance": font.getlength(ch), "bitmap": b"", }
+            return {
+                "comment": ch.isprintable() and ch or f"#{ord(ch):02X}",
+                "width": 0,
+                "height": 0,
+                "bearingX": 0,
+                "bearingY": 0,
+                "advance": font_to_use.getlength(ch),
+                "bitmap": b"",
+            }
 
         # Baseline-aware metrics: anchor "ls" = left side on baseline
-        x0, y0, x1, y1 = font.getbbox(ch, mode="L", anchor="ls")
+        x0, y0, x1, y1 = font_to_use.getbbox(ch, mode="L", anchor="ls")
 
         # Bitmap aligned to the same anchor; top-left is (0, 0) in mask space
-        mask = font.getmask(ch, mode="L", anchor="ls")
+        mask = font_to_use.getmask(ch, mode="L", anchor="ls")
         gw, gh = mask.size
 
         # Convert mask to 8-bit alpha row-major
@@ -53,20 +93,39 @@ def main():
                 v = mask.getpixel((x, y))  # mask-local coords
                 bmp.append(v)
 
-        adv = int(round(font.getlength(ch)))
-        return {"comment": ch.isprintable() and ch or f"#{ord(ch):02X}", "width": gw, "height": gh, "bearingX": x0,
+        adv = int(round(font_to_use.getlength(ch)))
+        return {
+            "comment": ch.isprintable() and ch or f"#{ord(ch):02X}",
+            "width": gw,
+            "height": gh,
+            "bearingX": x0,
             # distance from baseline up to the top of the bitmap (positive)
-            "bearingY": -y0, "advance": adv, "bitmap": bytes(bmp), }
+            "bearingY": -y0,
+            "advance": adv,
+            "bitmap": bytes(bmp),
+        }
 
     for code in range(128):
-        if code < 32 or code == 127:
+        if code in overrides_map:
+            ov = overrides_map[code]
+            ch = chr(ov["replacement"])
+            g = render_char(ch, font_to_use=ov["font"])
+            g["comment"] = ov["name"]
+        elif code < 32 or code == 127:
             ch = rep_char
+            g = render_char(ch)
         else:
             ch = chr(code)
+            g = render_char(ch)
 
-        g = render_char(ch)
-
-        key = (g["width"], g["height"], g["bearingX"], g["bearingY"], g["advance"], g["bitmap"])
+        key = (
+            g["width"],
+            g["height"],
+            g["bearingX"],
+            g["bearingY"],
+            g["advance"],
+            g["bitmap"],
+        )
         if key in bitmap_cache:
             offset = bitmap_cache[key]
         else:
@@ -74,21 +133,32 @@ def main():
             bitmap_bytes.extend(g["bitmap"])
             bitmap_cache[key] = offset
 
-        glyphs.append({"comment": g["comment"], "width": g["width"], "height": g["height"], "bearingX": g["bearingX"],
-            "bearingY": g["bearingY"], "advance": g["advance"], "offset": offset})
+        glyphs.append(
+            {
+                "comment": g["comment"],
+                "width": g["width"],
+                "height": g["height"],
+                "bearingX": g["bearingX"],
+                "bearingY": g["bearingY"],
+                "advance": g["advance"],
+                "offset": offset,
+            }
+        )
 
     # Emit header
     var_base = f"{args.name}_{args.size}".replace("-", "_")
 
-    with args.out.open("w", encoding="utf-8") as f:
+    with args.output.open("w", encoding="utf-8") as f:
         f.write("// Generated by generate_bitmap_font.py\n")
         f.write("#pragma once\n\n")
         f.write("#include <cstdint>\n")
-        f.write("#include \"clay_fb_renderer.hpp\" // BitmapFont, Glyph\n\n")
+        f.write('#include "clay_fb_renderer.hpp" // BitmapFont, Glyph\n\n')
         f.write(f"namespace fonts {{\n\n")
 
         # Bitmap array
-        f.write(f"inline constexpr std::uint8_t {var_base}_bitmap[] = {{ // 8bpp alpha\n")
+        f.write(
+            f"inline constexpr std::uint8_t {var_base}_bitmap[] = {{ // 8bpp alpha\n"
+        )
         line = "    "
         for i, b in enumerate(bitmap_bytes):
             token = f"{b}, "
@@ -102,17 +172,21 @@ def main():
 
         # Glyphs
         f.write(f"inline constexpr Glyph {var_base}_glyphs[128] = {{\n")
+        f.write("  // clang-format off\n")
         for g in glyphs:
-            f.write(f" /* {g['comment']} */  {{")
-            f.write(f"{g['width']}, {g['height']}, "
-                    f"{g['bearingX']}, {g['bearingY']}, "
-                    f"{int(round(g['advance'], 0))}, {g['offset']}")
-            f.write("},\n")
+            f.write("  { ")
+            f.write(
+                f"{g['width']:>2}, {g['height']:>2}, "
+                f"{g['bearingX']:>2}, {g['bearingY']:>2}, "
+                f"{int(round(g['advance'], 0)):>2}, {g['offset']:>4}"
+            )
+            f.write(f" }},  /* {g['comment']} */\n")
+        f.write("  // clang-format on\n")
         f.write("};\n\n")
 
         # Font instance
         f.write(f"inline constexpr BitmapFont {var_base} = {{\n")
-        f.write(f"    \"{args.name}\", // font name\n")
+        f.write(f'    "{args.name}", // font name\n')
         f.write(f"    {args.size}, // size\n")
         f.write(f"    {ascent}, // ascent\n")
         f.write(f"    -{descent}, // descent (negative)\n")
@@ -123,8 +197,15 @@ def main():
 
         f.write("} // namespace fonts\n")
 
-    subprocess.run(["clang-format", "-i", str(args.out)])
-    print(f"Wrote {args.out}")
+    subprocess.run(["clang-format", "-i", str(args.output)])
+    print(f"Wrote {args.output}")
+
+    if args.glyphs_header:
+        with args.glyphs_header.open("w", encoding="utf-8") as f:
+            f.write("#pragma once\n\n")
+            for code, ov in overrides_map.items():
+                f.write(f'#define GLYPH_{ov["name"]} = "\\x{code:02x}"\n')
+        print(f"Wrote {args.glyphs_header}")
 
 
 if __name__ == "__main__":

@@ -117,7 +117,7 @@ DECLARE_FN_TYPE(app_setup_fn_t, void *, app_api_t controller_api);
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define _DECLARE_APP_INTERNAL(_register_app_fn_name, _descriptor_name, _app_name, _setup_fn, _teardown_fn, ...) \
   app_descriptor_t _descriptor_name = { _app_name, _teardown_fn, __VA_ARGS__ };                                 \
-  EXPORT EXTERN_C app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) {                  \
+  EXTERN_C EXPORT app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) {                  \
     *userptr = _setup_fn(controller_api);                                                                       \
     return &_descriptor_name;                                                                                   \
   }                                                                                                             \

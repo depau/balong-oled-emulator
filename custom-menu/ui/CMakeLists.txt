@@ -4,6 +4,7 @@ add_library(ui SHARED
 )
 target_include_directories(ui PRIVATE
         "${COMMON_INCLUDE_DIR}"
+        "${SYMBOLS_INCLUDE_DIR}"
         vendor
         include
 )

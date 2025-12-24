@@ -70,11 +70,12 @@ public:
           GLYPH_MENU "gMn "
           GLYPH_CARET_DOWN "gDn "
           GLYPH_CARET_UP "gUp "
+          GLYPH_TOGGLE_ON "gOn "
+          GLYPH_TOGGLE_OFF "gOff "
           GLYPH_CHECKBOX_UNCHECKED "gCb "
           GLYPH_CHECKBOX_CHECKED "gCk "
           GLYPH_RADIO_BUTTON_UNCHECKED "gRb "
           GLYPH_RADIO_BUTTON_CHECKED "gRc "
-          GLYPH_TOGGLE_OFF "gOff "
           GLYPH_REFRESH "gRf ");
         // clang-format on
         CLAY_TEXT(body, &textCfg); // TEXT

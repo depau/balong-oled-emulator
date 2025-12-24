@@ -6,9 +6,8 @@
 
 class hello_world_app {
 public:
-  void on_enter(const app_api_t controller_api) { on_keypress(controller_api, 0); }
+  void on_enter(const app_api_t controller_api) {
 
-  void on_keypress(const app_api_t controller_api, int /*button*/) {
     Clay_BeginLayout();
     std::cout << "Rendering menu UI frame\n";
     constexpr Clay_Color COLOR_BG = { 20, 20, 40, 255 };
@@ -76,7 +75,6 @@ public:
           GLYPH_RADIO_BUTTON_UNCHECKED "gRb "
           GLYPH_RADIO_BUTTON_CHECKED "gRc "
           GLYPH_TOGGLE_OFF "gOff "
-          GLYPH_TOGGLE_ON "gOn "
           GLYPH_REFRESH "gRf ");
         // clang-format on
         CLAY_TEXT(body, &textCfg); // TEXT
@@ -85,6 +83,8 @@ public:
 
     controller_api->clay_render(Clay_EndLayout());
   }
+
+  void on_keypress(const app_api_t controller_api, int /*button*/) { controller_api->goto_main_menu(); }
 };
 
 DECLARE_CPP_APP("Hello World", hello_world_app);

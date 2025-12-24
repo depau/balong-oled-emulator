@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 
 // ReSharper disable once CppPassValueParameterByConstReference
 // ReSharper disable once CppParameterMayBeConstPtrOrRef
-static Clay_Dimensions ClayMeasureText(Clay_StringSlice text, Clay_TextElementConfig *config, void *userData) {
+static Clay_Dimensions clay_measure_text_impl(Clay_StringSlice text, Clay_TextElementConfig *config, void *userData) {
   if (userData == nullptr) {
     std::cerr << "ClayMeasureText: display_controller is null\n";
     abort();
@@ -35,6 +35,10 @@ static Clay_Dimensions ClayMeasureText(Clay_StringSlice text, Clay_TextElementCo
   return Clay_Dimensions{ static_cast<float>(width), static_cast<float>(height) };
 }
 
+Clay_Dimensions display_controller::clay_measure_text(const Clay_StringSlice &text, Clay_TextElementConfig *config) {
+  return clay_measure_text_impl(text, config, this);
+}
+
 display_controller::display_controller() {
   timer_create_ex = reinterpret_cast<uint32_t (*)(uint32_t, uint32_t, void (*)(void *), void *)>(
     dlsym(RTLD_DEFAULT, "osa_timer_create_ex"));
@@ -48,7 +52,7 @@ display_controller::display_controller() {
   assert(msgQex_send != nullptr && "Failed to locate osa_msgQex_send");
 
   Clay_Initialize(arena, Clay_Dimensions{ 128, 128 }, errHandler);
-  Clay_SetMeasureTextFunction(&ClayMeasureText, this);
+  Clay_SetMeasureTextFunction(&clay_measure_text_impl, this);
   load_apps();
 }
 

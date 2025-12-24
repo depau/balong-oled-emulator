@@ -72,3 +72,15 @@ uint32_t app_api_schedule_stdfn_timer(app_api_t controller_api,
 uint32_t app_api_cancel_timer(app_api_t controller_api, const uint32_t timer_id) {
   return get_display_controller(controller_api).cancel_timer(timer_id);
 }
+
+measure_text_result_t app_api_clay_measure_text(app_api_t controller_api,
+                                                const char *text,
+                                                const size_t length,
+                                                Clay_TextElementConfig *config) {
+  const auto [width, height] = get_display_controller(controller_api)
+                                 .clay_measure_text(Clay_StringSlice{ .length = static_cast<int32_t>(length),
+                                                                      .chars = text,
+                                                                      .baseChars = text },
+                                                    config);
+  return { width, height };
+}

@@ -96,6 +96,8 @@ public:
   [[nodiscard]] bool is_small_screen() const { return is_small_screen_mode; }
   [[nodiscard]] const font_registry_t &get_font_registry() const { return font_registry; }
 
+  Clay_Dimensions clay_measure_text(const Clay_StringSlice &text, Clay_TextElementConfig *config);
+
   void clay_render(const Clay_RenderCommandArray &cmds);
 
   void draw_frame(const std::span<const uint16_t> &buf) {

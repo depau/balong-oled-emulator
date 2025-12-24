@@ -32,6 +32,7 @@ extern "C" {
 #endif
 
 struct Clay_RenderCommandArray;
+struct Clay_TextElementConfig;
 
 typedef struct display_controller_api *app_api_t;
 typedef const struct display_controller_api *c_app_api_t;
@@ -45,6 +46,10 @@ typedef struct app_menu_entry {
   uintptr_t id;
   const char *name;
 } app_menu_entry_t;
+
+typedef struct measure_text_result {
+  float width, height;
+} measure_text_result_t;
 
 /**
  * App teardown function
@@ -117,7 +122,7 @@ DECLARE_FN_TYPE(app_setup_fn_t, void *, app_api_t controller_api);
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define _DECLARE_APP_INTERNAL(_register_app_fn_name, _descriptor_name, _app_name, _setup_fn, _teardown_fn, ...) \
   app_descriptor_t _descriptor_name = { _app_name, _teardown_fn, __VA_ARGS__ };                                 \
-  EXTERN_C EXPORT app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) {                  \
+  EXTERN_C EXPORT app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) {           \
     *userptr = _setup_fn(controller_api);                                                                       \
     return &_descriptor_name;                                                                                   \
   }                                                                                                             \
@@ -239,9 +244,9 @@ EXPORT void app_api_fatal_error(app_api_t controller_api, const char *message, b
  * @param userptr A user pointer to pass to the loader function
  */
 EXPORT void app_api_register_app_loader(app_api_t controller_api,
-                                 const char *file_extension,
-                                 app_loader_callback_fn_t loader_fn,
-                                 void *userptr);
+                                        const char *file_extension,
+                                        app_loader_callback_fn_t loader_fn,
+                                        void *userptr);
 
 /**
  * Register a timer callback
@@ -254,10 +259,10 @@ EXPORT void app_api_register_app_loader(app_api_t controller_api,
  * @return The timer ID
  */
 EXPORT uint32_t app_api_schedule_timer(app_api_t controller_api,
-                                uint32_t time,
-                                uint32_t repeat,
-                                void (*callback)(void *userptr),
-                                void *userptr);
+                                       uint32_t time,
+                                       uint32_t repeat,
+                                       void (*callback)(void *userptr),
+                                       void *userptr);
 
 /**
  * Cancel a previously registered timer
@@ -267,6 +272,20 @@ EXPORT uint32_t app_api_schedule_timer(app_api_t controller_api,
  * @return 0 on success, non-zero on failure
  */
 EXPORT uint32_t app_api_cancel_timer(app_api_t controller_api, uint32_t timer_id);
+
+/**
+ * Measure the dimensions of a text string with the given configuration, using Clay's text measurement.
+ *
+ * @param controller_api The controller API object
+ * @param text The text string to measure
+ * @param length The length of the text string
+ * @param config The text element configuration
+ * @return The measured dimensions
+ */
+EXPORT measure_text_result_t app_api_clay_measure_text(app_api_t controller_api,
+                                                       const char *text,
+                                                       size_t length,
+                                                       Clay_TextElementConfig *config);
 
 #ifdef __cplusplus
 }

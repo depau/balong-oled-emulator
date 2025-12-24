@@ -3,6 +3,7 @@
 #include <functional>
 #include <optional>
 #include <span>
+#include <string>
 #include <utility>
 
 #include "app_api.h"
@@ -133,6 +134,29 @@ struct display_controller_api {
    * @return 0 on success, non-zero on failure
    */
   uint32_t cancel_timer(uint32_t timer_id) { return app_api_cancel_timer(this, timer_id); }
+
+  /**
+   * Measure the dimensions of a text string with the given configuration, using Clay's text measurement.
+   *
+   * @param text The text string to measure
+   * @param length The length of the text string
+   * @param config The text element configuration
+   * @return The measured dimensions
+   */
+  measure_text_result_t clay_measure_text(const char *text, const size_t length, Clay_TextElementConfig *config) {
+    return app_api_clay_measure_text(this, text, length, config);
+  }
+
+  /**
+   * Measure the dimensions of a text string with the given configuration, using Clay's text measurement.
+   *
+   * @param text The text string to measure
+   * @param config The text element configuration
+   * @return The measured dimensions
+   */
+  measure_text_result_t clay_measure_text(const std::string &text, Clay_TextElementConfig *config) {
+    return app_api_clay_measure_text(this, text.c_str(), text.size(), config);
+  }
 };
 
 template<typename T, typename Arg>

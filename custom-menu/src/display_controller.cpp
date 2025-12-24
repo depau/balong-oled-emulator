@@ -255,7 +255,10 @@ void display_controller::gc_stdfn_timer(const uint32_t stdfn_timer_id) {
     const auto &helper = it->second;
     const uint32_t timer_id = helper.get_timer_id();
     const bool repeat = helper.is_repeat();
-    debugf("std::function timer fired: stdfn_timer_id=%u, timer_id=%u, repeat=%d\n", stdfn_timer_id, timer_id, repeat);
+    timer_debugf("std::function timer fired: stdfn_timer_id=%u, timer_id=%u, repeat=%d\n",
+                 stdfn_timer_id,
+                 timer_id,
+                 repeat);
     if (!repeat) {
       scheduled_stdfn_timers.erase(it);
       scheduled_stdfn_timer_ids.erase(timer_id);
@@ -287,11 +290,11 @@ uint32_t display_controller::schedule_timer(std::function<void()> &&callback, ui
                                       helper.get_userptr());
   helper.set_timer_id(timer_id);
 
-  debugf("scheduled std::function timer: stdfn_timer_id=%u, timer_id=%u, interval_ms=%u, repeat=%d\n",
-         stdfn_timer_id,
-         timer_id,
-         interval_ms,
-         repeat);
+  timer_debugf("scheduled std::function timer: stdfn_timer_id=%u, timer_id=%u, interval_ms=%u, repeat=%d\n",
+               stdfn_timer_id,
+               timer_id,
+               interval_ms,
+               repeat);
   scheduled_stdfn_timer_ids.emplace(timer_id, stdfn_timer_id);
   return timer_id;
 }

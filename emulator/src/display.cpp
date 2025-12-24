@@ -161,17 +161,17 @@ uint32_t Display::schedule(timer::callback_t &&callback, const uint32_t interval
   timers.emplace_back(std::move(callback), interval_ms, userptr, repeat);
   const timer &new_timer = timers.back();
   std::push_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
-  debugf("emulator: scheduling timer: timer_id=%u, interval_ms=%u, repeat=%d\n",
-         new_timer.get_id(),
-         interval_ms,
-         repeat);
-  debugf("emulator: new front timer: timer_id=%u, size=%zu\n", timers.front().get_id(), timers.size());
+  timer_debugf("emulator: scheduling timer: timer_id=%u, interval_ms=%u, repeat=%d\n",
+               new_timer.get_id(),
+               interval_ms,
+               repeat);
+  timer_debugf("emulator: new front timer: timer_id=%u, size=%zu\n", timers.front().get_id(), timers.size());
   return new_timer.get_id();
 }
 
 bool Display::cancel(const uint32_t timer_id) {
   std::scoped_lock lock(timers_mutex);
-  debugf("emulator: cancelling timer: timer_id=%u, size=%zu\n", timer_id, timers.size());
+  timer_debugf("emulator: cancelling timer: timer_id=%u, size=%zu\n", timer_id, timers.size());
   for (auto it = timers.begin(); it != timers.end(); ++it) {
     if (it->get_id() == timer_id) {
       timers.erase(it);
@@ -229,7 +229,7 @@ void Display::timer_thread_loop() {
 
       while (!timers.empty() && timers.front().is_expired()) {
         auto &t = timers.front();
-        debugf("emulator: timer expired: timer_id=%u, size=%zu\n", t.get_id(), timers.size());
+        timer_debugf("emulator: timer expired: timer_id=%u, size=%zu\n", t.get_id(), timers.size());
 
         if (t.should_repeat()) {
           t.reset();
@@ -242,7 +242,7 @@ void Display::timer_thread_loop() {
           std::pop_heap(timers.begin(), timers.end(), timer::compare_deadlines_reverse);
           auto to_run = std::move(t);
           timers.pop_back();
-          debugf("emulator: removing non-repeating timer: timer_id=%u, size=%zu\n", t.get_id(), timers.size());
+          timer_debugf("emulator: removing non-repeating timer: timer_id=%u, size=%zu\n", t.get_id(), timers.size());
 
           lock.unlock();
           to_run.run();

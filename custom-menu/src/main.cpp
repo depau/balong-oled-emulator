@@ -163,7 +163,7 @@ HIJACK int capset(const cap_user_header_t header, const cap_user_data_t data) {
   return capset_real(header, data);
 }
 
-#ifdef DEBUG_HACK
+#ifdef DEBUG_HOST
 HIJACK int32_t ATP_TRACE_IsModuleEnabled(const int32_t arg1, const int32_t arg2) {
   fprintf(stderr, "ATP_TRACE_IsModuleEnabled: %d, %d\n", arg1, arg2);
   return 1;

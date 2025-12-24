@@ -23,9 +23,6 @@ def main():
         help="Glyph used for control chars (ASCII < 32 or 127)",
     )
     parser.add_argument("--overrides", type=Path, help="Path to glyph_overrides.yaml")
-    parser.add_argument(
-        "--glyphs-header", type=Path, help="Path to output glyph names header"
-    )
     args = parser.parse_args()
 
     font = ImageFont.truetype(str(args.font), args.size)
@@ -46,7 +43,9 @@ def main():
 
         for ov in overrides_data.get("overrides", []):
             if chr(ov["target"]).isprintable():
-                warnings.warn(f"Overriding printable character {ov['target']} ({chr(ov['target'])})")
+                warnings.warn(
+                    f"Overriding printable character {ov['target']} ({chr(ov['target'])})"
+                )
             overrides_map[ov["target"]] = {
                 "name": ov["name"],
                 "replacement": ov["replacement"],
@@ -199,13 +198,6 @@ def main():
 
     subprocess.run(["clang-format", "-i", str(args.output)])
     print(f"Wrote {args.output}")
-
-    if args.glyphs_header:
-        with args.glyphs_header.open("w", encoding="utf-8") as f:
-            f.write("#pragma once\n\n")
-            for code, ov in overrides_map.items():
-                f.write(f'#define GLYPH_{ov["name"]} = "\\x{code:02x}"\n')
-        print(f"Wrote {args.glyphs_header}")
 
 
 if __name__ == "__main__":

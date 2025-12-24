@@ -22,6 +22,7 @@ function(custom_menu_add_app option order target)
             "${CMAKE_CURRENT_SOURCE_DIR}/${target}/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/../ui/vendor"
             "${CMAKE_CURRENT_SOURCE_DIR}/../ui/include"
+            "${SYMBOLS_INCLUDE_DIR}"
     )
 
     target_link_libraries(${target} PRIVATE ui balong_custom_menu)
@@ -31,6 +32,11 @@ function(custom_menu_add_app option order target)
             OUTPUT_NAME "${app_filename}"
     )
     apply_common_settings(${target})
+
+    add_dependencies(
+            ${target}
+            generate_font_headers
+    )
 endfunction()
 
 option(APPS_HELLO_WORLD "Build Hello World App" ON)

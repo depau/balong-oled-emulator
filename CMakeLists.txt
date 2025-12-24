@@ -13,6 +13,12 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(COMMON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+set(FONTS_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_fonts")
+set(SYMBOLS_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_symbols")
+file(MAKE_DIRECTORY "${FONTS_INCLUDE_DIR}/fonts")
+file(MAKE_DIRECTORY "${SYMBOLS_INCLUDE_DIR}")
+
+
 function(apply_common_settings target)
     if (ENABLE_SANITIZERS)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -68,4 +74,5 @@ if (EMULATOR)
     endif ()
 endif ()
 
+add_subdirectory(fonts)
 add_subdirectory(custom-menu)

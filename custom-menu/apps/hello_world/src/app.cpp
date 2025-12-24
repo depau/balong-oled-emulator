@@ -65,18 +65,9 @@ public:
       }) {
         // clang-format off
         const auto body = CLAY_STRING(
-          GLYPH_ARROW_BACK "gBk "
-          GLYPH_POWER_BUTTON "gPw "
-          GLYPH_MENU "gMn "
-          GLYPH_CARET_DOWN "gDn "
-          GLYPH_CARET_UP "gUp "
-          GLYPH_TOGGLE_ON "gOn "
-          GLYPH_TOGGLE_OFF "gOff "
-          GLYPH_CHECKBOX_UNCHECKED "gCb "
-          GLYPH_CHECKBOX_CHECKED "gCk "
-          GLYPH_RADIO_BUTTON_UNCHECKED "gRb "
-          GLYPH_RADIO_BUTTON_CHECKED "gRc "
-          GLYPH_REFRESH "gRf ");
+          "pA" GLYPH_ARROW_BACK GLYPH_POWER_BUTTON GLYPH_MENU GLYPH_CARET_DOWN GLYPH_CARET_UP GLYPH_TOGGLE_ON "Dq "
+          "pA"  GLYPH_TOGGLE_OFF GLYPH_CHECKBOX_UNCHECKED GLYPH_CHECKBOX_CHECKED GLYPH_RADIO_BUTTON_UNCHECKED GLYPH_RADIO_BUTTON_CHECKED GLYPH_REFRESH "Dq "
+        );
         // clang-format on
         CLAY_TEXT(body, &textCfg); // TEXT
       }

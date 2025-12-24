@@ -78,38 +78,54 @@ public:
                       active_entry < actions->size() - 1);
       }
 
-      size_t index = 0;
-      for (const auto &action : *actions) {
-        debugf("menu entry: %s\n", action->get_text().c_str());
+      CLAY({
+        .layout = {
+          .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
+          .childGap = ROOT_PADDING,
+          .layoutDirection = CLAY_TOP_TO_BOTTOM,
+        },
+        .clip = {
+          .horizontal = false,
+          .vertical = true,
+        }
+      }) {
+        size_t index = 0;
+        for (const auto &action : *actions) {
+          debugf("menu entry: %s\n", action->get_text().c_str());
 
-        if (index++ == active_entry) {
-          CLAY({
-            .layout = {
-              .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
-              .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
-            },
-            .backgroundColor = theme::COLOR_ACTIVE_BACKGROUND,
-            .clip = { .horizontal =  true, .vertical = false },
-            .border = activeBorderCfg,
-          }) {
-            // BOUNDING_BOX {
-            CLAY_TEXT(to_clay_string(action->get_text()), &activeTextCfg);
-            // }
-          }
-        } else {
-          CLAY({
-            .layout = {
-              .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
-              .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
-            },
-            .backgroundColor = theme::COLOR_BACKGROUND,
-            .clip = { .horizontal =  true, .vertical = false },
-          }) {
-            // BOUNDING_BOX {
-            CLAY_TEXT(to_clay_string(action->get_text()), &textCfg);
-            // }
+          if (index++ == active_entry) {
+            CLAY({
+              .layout = {
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
+                .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
+              },
+              .backgroundColor = theme::COLOR_ACTIVE_BACKGROUND,
+              .clip = { .horizontal =  true, .vertical = false },
+              .border = activeBorderCfg,
+            }) {
+              // BOUNDING_BOX {
+              CLAY_TEXT(to_clay_string(action->get_text()), &activeTextCfg);
+              // }
+            }
+          } else {
+            CLAY({
+              .layout = {
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
+                .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
+              },
+              .backgroundColor = theme::COLOR_BACKGROUND,
+              .clip = { .horizontal =  true, .vertical = false },
+            }) {
+              // BOUNDING_BOX {
+              CLAY_TEXT(to_clay_string(action->get_text()), &textCfg);
+              // }
+            }
           }
         }
+      }
+
+      if (controller_api.get_screen_height() > 64) {
+        ui_add_footer(&titleTextCfg, true, true);
       }
     }
 

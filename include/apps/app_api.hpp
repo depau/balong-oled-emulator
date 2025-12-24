@@ -9,10 +9,10 @@
 
 namespace priv_api {
 
-uint32_t app_api_schedule_stdfn_timer(app_api_t controller_api,
-                                      uint32_t time,
-                                      uint32_t repeat,
-                                      std::function<void()> &&callback);
+EXPORT uint32_t app_api_schedule_stdfn_timer(app_api_t controller_api,
+                                             uint32_t time,
+                                             uint32_t repeat,
+                                             std::function<void()> &&callback);
 
 }
 

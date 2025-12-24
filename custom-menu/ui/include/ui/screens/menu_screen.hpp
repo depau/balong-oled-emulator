@@ -52,6 +52,14 @@ public:
       .textAlignment = CLAY_TEXT_ALIGN_LEFT,
     };
 
+    auto titleTextCfg = (Clay_TextElementConfig) {
+      .textColor = ui::theme::COLOR_TEXT,
+      .fontId = controller_api.get_font(ui::theme::FONT_NAME_TEXT, ui::theme::FONT_SIZE_TEXT_SMALL).value_or(0),
+      .fontSize = ui::theme::FONT_SIZE_TEXT_SMALL,
+      .wrapMode = CLAY_TEXT_WRAP_WORDS,
+      .textAlignment = CLAY_TEXT_ALIGN_CENTER,
+    };
+
     auto activeBorderCfg = (Clay_BorderElementConfig) {
       .color = ui::theme::COLOR_ACTIVE_BORDER,
       .width = { theme::BORDER_ACTIVE_PX,
@@ -62,6 +70,14 @@ public:
     };
 
     ROOT_ELEMENT(&controller_api, CLAY_TOP_TO_BOTTOM) {
+      if (controller_api.get_screen_height() > 64) {
+        ui_add_header(&controller_api,
+                      "Main menu",
+                      &titleTextCfg,
+                      active_entry > 0,
+                      active_entry < actions->size() - 1);
+      }
+
       size_t index = 0;
       for (const auto &action : *actions) {
         debugf("menu entry: %s\n", action->get_text().c_str());

@@ -30,7 +30,6 @@ constexpr int BORDER_DISABLED_ACTIVE_PX = BORDER_PX;
 // Typography
 constexpr auto FONT_NAME_TEXT = "Poppins";
 constexpr int FONT_SIZE_TEXT = 12;
-
-constexpr int MENUENTRY_HEIGHT = FONT_SIZE_TEXT + (2 * MENUENTRY_PADDING) + (2 * BORDER_PX);
+constexpr int FONT_SIZE_TEXT_SMALL = 8;
 
 } // namespace ui::theme

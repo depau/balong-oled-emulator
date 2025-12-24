@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clay.hpp"
+#include "symbols.h"
 #include "ui/ui_theme.hpp"
 
 #define ROOT_ELEMENT(_ctrl, _dir) \
@@ -33,3 +34,109 @@
                  0 }, \
     } \
   })
+
+inline void ui_horizontal_line(Clay_Color color,
+                               const float box_height,
+                               const Clay_Padding padding = CLAY_PADDING_ALL(0),
+                               const float thickness = 1) {
+  CLAY({
+  .layout = {
+    .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(box_height) },
+    .padding = padding,
+  },
+}) {
+    CLAY({
+     .layout = {
+       .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(thickness) },
+     },
+     .backgroundColor = ui::theme::COLOR_TEXT,
+   }) {
+    }
+  }
+}
+
+inline void ui_add_header(app_api_t controller_api,
+                          const std::string &title,
+                          Clay_TextElementConfig *textCfg,
+                          const bool can_scroll_up = false,
+                          const bool can_scroll_down = false) {
+  const auto [textWidth, textHeight] = controller_api->clay_measure_text(title, textCfg);
+
+  CLAY({
+    .id = CLAY_ID("Header"),
+    .layout = {
+      .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
+      .padding = CLAY_PADDING_ALL(2),
+      .layoutDirection = CLAY_LEFT_TO_RIGHT,
+    },
+  }) {
+
+    ui_horizontal_line(ui::theme::COLOR_TEXT, textHeight, { 0, 4, static_cast<uint16_t>(textHeight / 2), 0 });
+
+    const Clay_String headerText = {
+      .isStaticallyAllocated = false,
+      .length = static_cast<int32_t>(title.size()),
+      .chars = title.c_str(),
+    };
+    CLAY_TEXT(headerText, textCfg);
+
+    const bool scroll = can_scroll_up || can_scroll_down;
+    const auto [caretWidth, caretHeight] = controller_api->clay_measure_text(GLYPH_CARET_UP, textCfg);
+    CLAY({
+      .layout = {
+        .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(textHeight) },
+        .padding = {4, static_cast<uint16_t>(scroll ? caretWidth - 2 : 0), static_cast<uint16_t>(textHeight / 2), 0},
+      },
+    }) {
+      CLAY({
+       .layout = {
+         .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(1) },
+       },
+       .backgroundColor = ui::theme::COLOR_TEXT,
+     }) {
+      }
+
+      if (can_scroll_up) {
+        CLAY({
+          .layout = {
+            .sizing = { CLAY_SIZING_FIXED(caretWidth - 2), CLAY_SIZING_FIXED(caretHeight) },
+          },
+          .floating = {
+            .offset = {
+              .x = 2,
+              .y = -caretHeight/5 + 2,
+            },
+            .attachPoints = {
+              .element = CLAY_ATTACH_POINT_RIGHT_TOP,
+              .parent = CLAY_ATTACH_POINT_RIGHT_TOP
+            },
+            .attachTo = CLAY_ATTACH_TO_PARENT,
+          }
+        }) {
+          CLAY_TEXT(CLAY_STRING_CONST(GLYPH_CARET_UP), textCfg);
+        }
+      }
+
+      if (can_scroll_down) {
+        CLAY({
+          .layout = {
+            .sizing = { CLAY_SIZING_FIXED(caretWidth - 2), CLAY_SIZING_FIXED(caretHeight) },
+          },
+          .floating = {
+            .offset = {
+              .x = 2,
+              .y = caretHeight/5 + 2,
+            },
+            .attachPoints = {
+              .element = CLAY_ATTACH_POINT_RIGHT_TOP,
+              .parent = CLAY_ATTACH_POINT_RIGHT_TOP
+            },
+            .attachTo = CLAY_ATTACH_TO_PARENT
+          }
+        }) {
+          CLAY_TEXT(CLAY_STRING_CONST(GLYPH_CARET_DOWN), textCfg);
+        }
+      }
+    }
+  }
+}

@@ -5,7 +5,13 @@ endif ()
 
 add_custom_command(
         OUTPUT "${FONTS_INCLUDE_DIR}/fonts/poppins_12.hpp"
-        COMMAND ${UV_EXECUTABLE} run python "${CMAKE_CURRENT_SOURCE_DIR}/generate_bitmap_font.py" "${CMAKE_CURRENT_SOURCE_DIR}/Poppins-Regular.ttf" 12 -o "${FONTS_INCLUDE_DIR}/fonts/poppins_12.hpp" --name Poppins --overrides "${CMAKE_CURRENT_SOURCE_DIR}/glyph_overrides.yaml"
+        COMMAND ${UV_EXECUTABLE} run python
+        "${CMAKE_CURRENT_SOURCE_DIR}/generate_bitmap_font.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Poppins-Regular.ttf" 12
+        -o "${FONTS_INCLUDE_DIR}/fonts/poppins_12.hpp"
+        --name Poppins
+        --overrides "${CMAKE_CURRENT_SOURCE_DIR}/glyph_overrides.yaml"
+        --preview "${CMAKE_CURRENT_BINARY_DIR}/poppins_12_preview.png"
         DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/generate_bitmap_font.py"
         "${CMAKE_CURRENT_SOURCE_DIR}/Poppins-Regular.ttf"

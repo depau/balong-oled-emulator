@@ -6,7 +6,7 @@ import warnings
 from pathlib import Path
 
 import yaml
-from PIL import ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 
 def main():
@@ -23,6 +23,7 @@ def main():
         help="Glyph used for control chars (ASCII < 32 or 127)",
     )
     parser.add_argument("--overrides", type=Path, help="Path to glyph_overrides.yaml")
+    parser.add_argument("--preview", type=Path, help="Path to output preview PNG")
     args = parser.parse_args()
 
     font = ImageFont.truetype(str(args.font), args.size)
@@ -207,6 +208,72 @@ def main():
 
     subprocess.run(["clang-format", "-i", str(args.output)])
     print(f"Wrote {args.output}")
+
+    if args.preview:
+        # Create a preview image
+        # Grid layout: 16 columns (128 chars / 16 = 8 rows)
+        cols = 16
+        rows = 8
+        cell_width = args.size * 2
+        cell_height = args.size * 2
+        img_width = cols * cell_width
+        img_height = rows * cell_height
+
+        img = Image.new("RGBA", (img_width, img_height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+
+        # Baseline position within the cell
+        # We put the baseline somewhat below the center to accommodate descenders
+        baseline_y = int(cell_height * 0.7)
+
+        for code in range(128):
+            g = glyphs[code]
+            row = code // cols
+            col = code % cols
+
+            x_base = col * cell_width + cell_width // 4
+            y_base = row * cell_height + baseline_y
+
+            # bearingY is distance from baseline UP to top of bitmap.
+            # So top of bitmap = y_base - bearingY
+            # bearingX is distance from pen position to left of bitmap.
+            # So left of bitmap = x_base + bearingX
+
+            # Reconstruct the bitmap image from bytes
+            if g["width"] > 0 and g["height"] > 0:
+                # Extract bitmap slice
+                offset = g["offset"]
+                size = g["width"] * g["height"]
+                glyph_bytes = bitmap_bytes[offset : offset + size]
+
+                # Create a temporary image for the glyph
+                glyph_img = Image.frombytes("L", (g["width"], g["height"]), glyph_bytes)
+
+                # Draw it onto the preview
+                dst_x = x_base + g["bearingX"]
+                dst_y = y_base - g["bearingY"]
+
+                # We use the glyph image as a mask to fill with white color
+                img.paste((255, 255, 255, 255), (dst_x, dst_y), mask=glyph_img)
+
+            # Draw a faint box around the cell
+            draw.rectangle(
+                [
+                    col * cell_width,
+                    row * cell_height,
+                    (col + 1) * cell_width,
+                    (row + 1) * cell_height,
+                ],
+                outline=(50, 50, 50),
+            )
+            # Draw baseline
+            draw.line(
+                [col * cell_width, y_base, (col + 1) * cell_width, y_base],
+                fill=(100, 100, 100),
+            )
+
+        img.save(args.preview)
+        print(f"Wrote {args.preview}")
 
 
 if __name__ == "__main__":

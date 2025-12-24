@@ -9,13 +9,13 @@
 #include <vector>
 
 #include "apps/app_api.hpp"
-#include "clay.hpp"
 #include "clay_fb_renderer.hpp"
 #include "fonts/poppins_12.hpp"
 #include "hooked_functions.h"
 #include "stdfn_timer_helper.hpp"
 
 DECLARE_FN_TYPE(app_register_fn_t, app_descriptor_t *, app_api_t controller_api, void **userptr);
+
 class display_controller : display_controller_api {
   friend class main_menu_app;
   friend class stdfn_timer_helper<display_controller>;
@@ -127,4 +127,6 @@ public:
   schedule_timer(void (*callback)(void *userptr), uint32_t interval_ms, bool repeat = false, void *userptr = nullptr);
 
   uint32_t cancel_timer(uint32_t timer_id);
+
+  const std::vector<std::pair<app_descriptor, void *>> &get_apps() { return apps; }
 };

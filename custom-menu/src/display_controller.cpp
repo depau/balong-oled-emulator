@@ -123,7 +123,7 @@ void display_controller::load_apps() {
   }
 }
 
-void display_controller::set_active_app(std::optional<size_t> app_index) {
+void display_controller::set_active_app(const std::optional<size_t> app_index) {
   assert(!app_index.has_value() || app_index.value() < apps.size());
   if (app_index == active_app_index)
     return;
@@ -143,7 +143,7 @@ void display_controller::set_active_app(std::optional<size_t> app_index) {
 std::vector<std::string> display_controller::get_app_lookup_paths() {
   std::vector<std::string> app_lookup_paths;
   if (app_lookup_paths.empty()) {
-    if (const char *env_paths = std::getenv("CUSTOM_MENU_APP_PATHS"); env_paths != nullptr) {
+    if (const char *env_paths = std::getenv("CUSTOM_MENU_APP_PATH"); env_paths != nullptr) {
       std::string paths_str(env_paths);
       size_t start = 0;
       size_t end = paths_str.find(':');

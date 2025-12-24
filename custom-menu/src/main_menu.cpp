@@ -1,88 +1,46 @@
-// ReSharper disable CppMemberFunctionMayBeStatic
 #include <iostream>
+#include <ranges>
 
-#include "clay.hpp"
+#include "apps/app_api.hpp"
+#include "display_controller.hpp"
 #include "main_menu.hpp"
+#include "ui/actions/button.hpp"
 
 _DECLARE_CPP_APP_INTERNAL(register_main_menu_app, main_menu_app_descriptor, "Main Menu", main_menu_app);
 
-void main_menu_app::on_enter(app_api_t controller_api) { // NOLINT(*-convert-member-functions-to-static)
-  Clay_BeginLayout();
-  std::cout << "Rendering menu UI frame\n";
-  constexpr Clay_Color COLOR_BG = { 20, 20, 40, 255 };
-  constexpr Clay_Color COLOR_HEADER = { 40, 80, 160, 255 };
-  constexpr Clay_Color COLOR_CLIPBOX = { 20, 40, 80, 255 };
-  constexpr Clay_Color COLOR_BORDER = { 255, 255, 255, 255 };
-  constexpr Clay_Color COLOR_TEXT = { 240, 240, 240, 255 };
+main_menu_app::main_menu_app(const app_api_t controller_api) : session(*controller_api) {
+  menu_screen = &session.push_screen(std::make_unique<ui::screens::menu_screen>(actions));
+}
 
-  const auto headerBorder = (Clay_BorderElementConfig) {
-    .color = COLOR_BORDER,
-    .width = { 1, 1, 1, 1, 0 },
-  };
+void main_menu_app::load_app_actions(display_controller &controller) {
+  actions.clear();
+  actions.emplace_back(std::make_unique<ui::actions::button>("Back", [&controller, this] {
+    controller.set_active(false);
+    menu_screen->set_active_entry(0);
+  }));
 
-  auto textCfg = (Clay_TextElementConfig) {
-    .textColor = COLOR_TEXT,
-    .fontId = 0,
-    .fontSize = 12,
-    .letterSpacing = 0,
-    .lineHeight = 0,
-    .wrapMode = CLAY_TEXT_WRAP_WORDS,
-    .textAlignment = CLAY_TEXT_ALIGN_LEFT,
-  };
-
-  CLAY({
-      .id = CLAY_ID("Root"),
-        .layout = {
-            .sizing = { CLAY_SIZING_FIXED(128), CLAY_SIZING_FIXED(128) },
-            .padding = CLAY_PADDING_ALL(4),
-            .childGap = 4,
-            .layoutDirection = CLAY_TOP_TO_BOTTOM,
-        },
-        .backgroundColor = COLOR_BG, // RECTANGLE
-    }) {
-    // Header with border + hello text
-    CLAY({
-        .id = CLAY_ID("Header"),
-        .layout = {
-            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(20) },
-            .padding = CLAY_PADDING_ALL(2),
-        },
-        .backgroundColor = COLOR_HEADER, // RECTANGLE
-        .border = headerBorder,          // BORDER
-    }) {
-      const auto hello = CLAY_STRING("Hello, world!");
-      CLAY_TEXT(hello, &textCfg); // TEXT
+  int index = 0;
+  for (const auto &descriptor : controller.get_apps() | std::views::keys) {
+    if (index == 0) {
+      ++index;
+      continue; // skip main menu itself
     }
-
-    // Clipped box with long text to exercise scissor
-    CLAY({
-        .id = CLAY_ID("ClippedBox"),
-        .layout = {
-            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(40) },
-            .padding = CLAY_PADDING_ALL(2),
-        },
-        .backgroundColor = COLOR_CLIPBOX,          // RECTANGLE
-        .clip = { .horizontal = false, .vertical = true }, // SCISSOR_START/END
-    }) {
-      const auto longText = CLAY_STRING("This is long text inside a clipped region. "
-                                        "Only the part within the box is visible.");
-      CLAY_TEXT(longText, &textCfg); // TEXT + SCISSOR
-    }
-
-    // Extra body text
-    const auto body = CLAY_STRING("Body: Clay on 128x128/128x64 framebuffers.");
-    CLAY_TEXT(body, &textCfg); // TEXT
+    actions.emplace_back(std::make_unique<ui::actions::button>(descriptor.name, [&controller, index] {
+      controller.set_active_app(index);
+    }));
+    ++index;
   }
-
-  controller_api->clay_render(Clay_EndLayout());
+  debugf("registered %zu main menu actions\n", actions.size());
 }
 
-void main_menu_app::on_leave(app_api_t controller_api) {
-  // Cleanup or stop rendering the main menu UI here
+void main_menu_app::on_enter(const app_api_t controller_api) {
+  assert(controller_api != nullptr);
+  auto &controller = static_cast<display_controller &>(*controller_api);
+
+  load_app_actions(controller);
+  session.render();
 }
 
-void main_menu_app::on_keypress(app_api_t controller_api, int button) {
-  std::cout << "Main menu received keypress: " << button << '\n';
-  on_enter(controller_api);
-  // Handle keypress events for the main menu here
+void main_menu_app::on_keypress(app_api_t, const int button) const {
+  session.handle_keypress(button);
 }

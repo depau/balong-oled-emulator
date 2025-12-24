@@ -8,6 +8,7 @@ add_library(balong_custom_menu SHARED
 target_include_directories(balong_custom_menu PRIVATE
         "${COMMON_INCLUDE_DIR}"
         include
+        app-api/include
         ui/vendor
         ui/include
 )

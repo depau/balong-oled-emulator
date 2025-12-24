@@ -1,0 +1,66 @@
+#pragma once
+
+#include <functional>
+#include <string>
+
+#include "iaction.hpp"
+
+namespace ui::actions {
+
+class toggle final : public iaction {
+public:
+  using on_select_fn_t = std::function<void(bool)>;
+
+  /**
+   * The display mode of the toggle.
+   */
+  enum class display_mode {
+    CHECKBOX,
+    SWITCH,
+  };
+
+private:
+  std::string text = "Toggle";
+  bool enabled = true;
+  bool checked = false;
+  display_mode mode = display_mode::CHECKBOX;
+  on_select_fn_t on_select;
+
+public:
+  toggle() = default;
+  explicit toggle(const std::string &text,
+                  on_select_fn_t &&on_select,
+                  const bool checked,
+                  const display_mode mode = display_mode::CHECKBOX,
+                  const bool enabled = true) :
+    text(text), enabled(enabled), checked(checked), mode(mode), on_select(std::move(on_select)) {}
+
+  const std::string &get_text() const override { return text; }
+
+  bool is_selectable() const override { return true; }
+
+  bool is_enabled() const override { return enabled; }
+
+  /**
+   * Return whether the toggle is currently checked.
+   *
+   * @return True if the toggle is checked, false otherwise.
+   */
+  virtual bool is_checked() const { return checked; }
+
+  /**
+   * Get the display mode of the toggle.
+   *
+   * @return The display mode of the toggle.
+   */
+  virtual display_mode get_display_mode() const { return mode; }
+
+  void select() override {
+    checked = !checked;
+    if (on_select) {
+      on_select(checked);
+    }
+  }
+};
+
+} // namespace ui::actions

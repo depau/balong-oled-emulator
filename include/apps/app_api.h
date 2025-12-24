@@ -19,6 +19,8 @@
 #define REGISTER_APP_FN_NAME STRINGIFY(REGISTER_APP_FN)
 #define APP_DESCRIPTOR_NAME STRINGIFY(APP_DESCRIPTOR_NAME)
 
+#define EXPORT __attribute__((visibility("default"), noinline))
+
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
 #else
@@ -115,7 +117,7 @@ DECLARE_FN_TYPE(app_setup_fn_t, void *, app_api_t controller_api);
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define _DECLARE_APP_INTERNAL(_register_app_fn_name, _descriptor_name, _app_name, _setup_fn, _teardown_fn, ...) \
   app_descriptor_t _descriptor_name = { _app_name, _teardown_fn, __VA_ARGS__ };                                 \
-  EXTERN_C app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) {                  \
+  EXPORT EXTERN_C app_descriptor_t *_register_app_fn_name(app_api_t controller_api, void **userptr) {                  \
     *userptr = _setup_fn(controller_api);                                                                       \
     return &_descriptor_name;                                                                                   \
   }                                                                                                             \
@@ -163,7 +165,7 @@ DECLARE_FN_TYPE(app_loader_callback_fn_t,
  * @param controller_api The controller API object
  * @return The current display mode
  */
-display_mode_t app_api_get_display_mode(c_app_api_t controller_api);
+EXPORT display_mode_t app_api_get_display_mode(c_app_api_t controller_api);
 
 /**
  * Get the screen width in pixels
@@ -171,7 +173,7 @@ display_mode_t app_api_get_display_mode(c_app_api_t controller_api);
  * @param controller_api The controller API object
  * @return The screen width in pixels
  */
-size_t app_api_get_screen_width(c_app_api_t controller_api);
+EXPORT size_t app_api_get_screen_width(c_app_api_t controller_api);
 
 /**
  * Get the screen height in pixels
@@ -179,7 +181,7 @@ size_t app_api_get_screen_width(c_app_api_t controller_api);
  * @param controller_api The controller API object
  * @return The screen height in pixels
  */
-size_t app_api_get_screen_height(c_app_api_t controller_api);
+EXPORT size_t app_api_get_screen_height(c_app_api_t controller_api);
 
 /**
  * Get a font ID by name and size
@@ -189,7 +191,7 @@ size_t app_api_get_screen_height(c_app_api_t controller_api);
  * @param font_size The size of the font
  * @return The font ID, or FONT_NOT_FOUND if not found
  */
-uint16_t app_api_get_font(c_app_api_t controller_api, const char *font_name, int font_size);
+EXPORT uint16_t app_api_get_font(c_app_api_t controller_api, const char *font_name, int font_size);
 
 /**
  * Render a frame using Clay rendering commands
@@ -197,7 +199,7 @@ uint16_t app_api_get_font(c_app_api_t controller_api, const char *font_name, int
  * @param controller_api The controller API object
  * @param cmds The Clay rendering commands
  */
-void app_api_clay_render(app_api_t controller_api, const Clay_RenderCommandArray *cmds);
+EXPORT void app_api_clay_render(app_api_t controller_api, const Clay_RenderCommandArray *cmds);
 
 /**
  * Draw a raw frame buffer to the screen
@@ -206,14 +208,14 @@ void app_api_clay_render(app_api_t controller_api, const Clay_RenderCommandArray
  * @param buf The frame buffer data
  * @param buf_size The size of the frame buffer in pixels
  */
-void app_api_draw_frame(app_api_t controller_api, const uint16_t *buf, size_t buf_size);
+EXPORT void app_api_draw_frame(app_api_t controller_api, const uint16_t *buf, size_t buf_size);
 
 /**
  * Return to the main menu, leaving the current app. `on_leave` will be called before returning.
  *
  * @param controller_api The controller API object
  */
-void app_api_goto_main_menu(app_api_t controller_api);
+EXPORT void app_api_goto_main_menu(app_api_t controller_api);
 
 /**
  * Report a fatal error to the controller.
@@ -226,7 +228,7 @@ void app_api_goto_main_menu(app_api_t controller_api);
  * @param message The error message to display
  * @param unload_app Whether to unload the app after reporting the error
  */
-void app_api_fatal_error(app_api_t controller_api, const char *message, bool unload_app);
+EXPORT void app_api_fatal_error(app_api_t controller_api, const char *message, bool unload_app);
 
 /**
  * Register an app loader for a specific file extension
@@ -236,7 +238,7 @@ void app_api_fatal_error(app_api_t controller_api, const char *message, bool unl
  * @param loader_fn The loader function to call when loading an app with the specified extension
  * @param userptr A user pointer to pass to the loader function
  */
-void app_api_register_app_loader(app_api_t controller_api,
+EXPORT void app_api_register_app_loader(app_api_t controller_api,
                                  const char *file_extension,
                                  app_loader_callback_fn_t loader_fn,
                                  void *userptr);
@@ -251,7 +253,7 @@ void app_api_register_app_loader(app_api_t controller_api,
  * @param userptr A user pointer to pass to the callback function
  * @return The timer ID
  */
-uint32_t app_api_schedule_timer(app_api_t controller_api,
+EXPORT uint32_t app_api_schedule_timer(app_api_t controller_api,
                                 uint32_t time,
                                 uint32_t repeat,
                                 void (*callback)(void *userptr),
@@ -264,7 +266,7 @@ uint32_t app_api_schedule_timer(app_api_t controller_api,
  * @param timer_id The ID of the timer to cancel
  * @return 0 on success, non-zero on failure
  */
-uint32_t app_api_cancel_timer(app_api_t controller_api, uint32_t timer_id);
+EXPORT uint32_t app_api_cancel_timer(app_api_t controller_api, uint32_t timer_id);
 
 #ifdef __cplusplus
 }

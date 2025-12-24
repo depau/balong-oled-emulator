@@ -11,7 +11,7 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=$HOME/Android/Sdk/ndk/25.2.9519653/build/cmake/android.toolchain.cmake \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
   -DEMULATOR=OFF \
-  -DDEBUG_HACK=ON \
+  -DDEBUG_HOST=ON \
   -DSTRIP=OFF \
   ..
 ```

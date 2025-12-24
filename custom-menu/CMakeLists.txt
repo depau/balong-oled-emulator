@@ -19,8 +19,8 @@ target_compile_options(balong_custom_menu PRIVATE -fvisibility=hidden -fvisibili
 target_link_options(balong_custom_menu PRIVATE "-Wl,--exclude-libs,ALL")
 apply_common_settings(balong_custom_menu)
 
-if (DEBUG_HACK)
-    target_compile_definitions(balong_custom_menu PRIVATE DEBUG_HACK=1)
+if (DEBUG_HOST)
+    target_compile_definitions(balong_custom_menu PRIVATE DEBUG_HOST=1)
 endif ()
 
 add_subdirectory(ui)

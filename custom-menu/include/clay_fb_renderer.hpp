@@ -8,6 +8,14 @@
 #include "clay.hpp"
 #include "debug.h"
 
+#ifdef DEBUG_RENDER_COMMANDS
+#define render_debugf(...) debugf(__VA_ARGS__)
+#else
+#define render_debugf(...) \
+  do {                     \
+  } while (0)
+#endif
+
 #define bswap16(x) __builtin_bswap16(x)
 
 inline constexpr float BW_LUMINANCE_THRESHOLD = 0.4f;
@@ -65,7 +73,7 @@ struct BitmapFont {
     }
 
     maxWidth = std::max(maxWidth, lineWidth);
-    return TextMetrics{ maxWidth, lines * lineHeight + (lines - 1) * lineGap};
+    return TextMetrics{ maxWidth, lines * lineHeight + (lines - 1) * lineGap };
   }
 };
 
@@ -291,11 +299,11 @@ public:
 
       switch (cmd.commandType) {
       case CLAY_RENDER_COMMAND_TYPE_NONE:
-        debugf("render command: none\n");
+        render_debugf("render command: none\n");
         break;
 
       case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
-        debugf("render command: rectangle[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
+        render_debugf("render command: rectangle[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
                bb.x,
                bb.y,
                bb.w,
@@ -310,7 +318,7 @@ public:
       }
 
       case CLAY_RENDER_COMMAND_TYPE_BORDER: {
-        debugf("render command: border[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
+        render_debugf("render command: border[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
                bb.x,
                bb.y,
                bb.w,
@@ -324,7 +332,7 @@ public:
       }
 
       case CLAY_RENDER_COMMAND_TYPE_TEXT: {
-        debugf("render command: text[%d, %d, %d, %d] - text: \"%.*s\", fontId: %d, fontSize: %d, color: "
+        render_debugf("render command: text[%d, %d, %d, %d] - text: \"%.*s\", fontId: %d, fontSize: %d, color: "
                "#%02X%02X%02X%02X\n",
                bb.x,
                bb.y,
@@ -347,12 +355,12 @@ public:
       }
 
       case CLAY_RENDER_COMMAND_TYPE_IMAGE:
-        debugf("render command: image\n");
+        render_debugf("render command: image\n");
         // Not used in this example; can be implemented similarly
         break;
 
       case CLAY_RENDER_COMMAND_TYPE_SCISSOR_START: {
-        debugf("render command: scissorStart[%d, %d, %d, %d]\n", bb.x, bb.y, bb.w, bb.h);
+        render_debugf("render command: scissorStart[%d, %d, %d, %d]\n", bb.x, bb.y, bb.w, bb.h);
         IntRect newClip = bb;
         if (!scissorStack.empty()) {
           IntRect merged;
@@ -368,14 +376,14 @@ public:
       }
 
       case CLAY_RENDER_COMMAND_TYPE_SCISSOR_END: {
-        debugf("render command: scissorEnd\n");
+        render_debugf("render command: scissorEnd\n");
         if (!scissorStack.empty())
           scissorStack.pop_back();
         break;
       }
 
       case CLAY_RENDER_COMMAND_TYPE_CUSTOM:
-        debugf("render command: custom\n");
+        render_debugf("render command: custom\n");
         break;
       }
     }

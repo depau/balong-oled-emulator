@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+
 import argparse
 import subprocess
-import textwrap
 from pathlib import Path
 
-from PIL import Image, ImageFont, ImageDraw
+from PIL import ImageFont
 
 
 def main():
@@ -12,10 +12,8 @@ def main():
     parser.add_argument("font", type=Path, help="TTF/OTF font file")
     parser.add_argument("size", type=int, help="Font pixel size")
     parser.add_argument("out", type=Path, help="Output header path")
-    parser.add_argument("--name", default="MyFont",
-                        help="Base C++ identifier for the font")
-    parser.add_argument("--replacement-char", default="□",
-                        help="Glyph used for control chars (ASCII < 32 or 127)")
+    parser.add_argument("--name", default="MyFont", help="Base C++ identifier for the font")
+    parser.add_argument("--replacement-char", default="□", help="Glyph used for control chars (ASCII < 32 or 127)")
     args = parser.parse_args()
 
     font = ImageFont.truetype(str(args.font), args.size)
@@ -38,15 +36,8 @@ def main():
         raw_mask = font.getmask(ch, mode="L")
         if not raw_mask.getbbox():
             # whitespace or non-drawing glyph
-            return {
-                "comment": ch.isprintable() and ch or f"#{ord(ch):02X}",
-                "width": 0,
-                "height": 0,
-                "bearingX": 0,
-                "bearingY": 0,
-                "advance": font.getlength(ch),
-                "bitmap": b"",
-            }
+            return {"comment": ch.isprintable() and ch or f"#{ord(ch):02X}", "width": 0, "height": 0, "bearingX": 0,
+                "bearingY": 0, "advance": font.getlength(ch), "bitmap": b"", }
 
         # Baseline-aware metrics: anchor "ls" = left side on baseline
         x0, y0, x1, y1 = font.getbbox(ch, mode="L", anchor="ls")
@@ -63,16 +54,9 @@ def main():
                 bmp.append(v)
 
         adv = int(round(font.getlength(ch)))
-        return {
-            "comment": ch.isprintable() and ch or f"#{ord(ch):02X}",
-            "width": gw,
-            "height": gh,
-            "bearingX": x0,
+        return {"comment": ch.isprintable() and ch or f"#{ord(ch):02X}", "width": gw, "height": gh, "bearingX": x0,
             # distance from baseline up to the top of the bitmap (positive)
-            "bearingY": -y0,
-            "advance": adv,
-            "bitmap": bytes(bmp),
-        }
+            "bearingY": -y0, "advance": adv, "bitmap": bytes(bmp), }
 
     for code in range(128):
         if code < 32 or code == 127:
@@ -90,15 +74,8 @@ def main():
             bitmap_bytes.extend(g["bitmap"])
             bitmap_cache[key] = offset
 
-        glyphs.append({
-            "comment": g["comment"],
-            "width": g["width"],
-            "height": g["height"],
-            "bearingX": g["bearingX"],
-            "bearingY": g["bearingY"],
-            "advance": g["advance"],
-            "offset": offset
-        })
+        glyphs.append({"comment": g["comment"], "width": g["width"], "height": g["height"], "bearingX": g["bearingX"],
+            "bearingY": g["bearingY"], "advance": g["advance"], "offset": offset})
 
     # Emit header
     var_base = f"{args.name}_{args.size}".replace("-", "_")

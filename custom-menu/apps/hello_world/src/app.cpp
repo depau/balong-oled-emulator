@@ -2,7 +2,7 @@
 
 #include "apps/app_api.hpp"
 #include "clay.hpp"
-#include "ui/ui_theme.hpp"
+#include "symbols.h"
 
 class hello_world_app {
 public:
@@ -42,7 +42,6 @@ public:
         },
         .backgroundColor = COLOR_BG, // RECTANGLE
     }) {
-      // Header with border + hello text
       CLAY({
         .id = CLAY_ID("Header"),
         .layout = {
@@ -56,24 +55,32 @@ public:
         CLAY_TEXT(hello, &textCfg); // TEXT
       }
 
-      // Clipped box with long text to exercise scissor
       CLAY({
-        .id = CLAY_ID("ClippedBox"),
+        .id = CLAY_ID("Symbols demo"),
         .layout = {
-            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(40) },
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT() },
             .padding = CLAY_PADDING_ALL(2),
         },
-        .backgroundColor = COLOR_CLIPBOX,          // RECTANGLE
-        .clip = { .horizontal = false, .vertical = true }, // SCISSOR_START/END
-    }) {
-        const auto longText = CLAY_STRING("This is long text inside a clipped region. "
-                                          "Only the part within the box is visible.");
-        CLAY_TEXT(longText, &textCfg); // TEXT + SCISSOR
+        .backgroundColor = COLOR_HEADER, // RECTANGLE
+        .border = headerBorder
+      }) {
+        // clang-format off
+        const auto body = CLAY_STRING(
+          GLYPH_ARROW_BACK "Back "
+          GLYPH_POWER_BUTTON "Pow "
+          GLYPH_MENU "Menu "
+          GLYPH_CARET_DOWN "Down "
+          GLYPH_CARET_UP "Up "
+          GLYPH_CHECKBOX_UNCHECKED "Chb "
+          GLYPH_CHECKBOX_CHECKED "Chk "
+          GLYPH_RADIO_BUTTON_UNCHECKED "Rbt "
+          GLYPH_RADIO_BUTTON_CHECKED "Rbc "
+          GLYPH_TOGGLE_OFF "Off "
+          GLYPH_TOGGLE_ON "On "
+          GLYPH_REFRESH "Rfsh ");
+        // clang-format on
+        CLAY_TEXT(body, &textCfg); // TEXT
       }
-
-      // Extra body text
-      const auto body = CLAY_STRING("Body: Clay on 128x128/128x64 framebuffers.");
-      CLAY_TEXT(body, &textCfg); // TEXT
     }
 
     controller_api->clay_render(Clay_EndLayout());

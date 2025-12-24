@@ -4,6 +4,24 @@ if (NOT UV_EXECUTABLE)
 endif ()
 
 add_custom_command(
+        OUTPUT "${FONTS_INCLUDE_DIR}/fonts/poppins_8.hpp"
+        COMMAND ${UV_EXECUTABLE} run python
+        "${CMAKE_CURRENT_SOURCE_DIR}/generate_bitmap_font.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Poppins-Regular.ttf" 8
+        -o "${FONTS_INCLUDE_DIR}/fonts/poppins_8.hpp"
+        --name Poppins
+        --overrides "${CMAKE_CURRENT_SOURCE_DIR}/glyph_overrides.yaml"
+        --preview "${CMAKE_CURRENT_BINARY_DIR}/poppins_8_preview.png"
+        DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/generate_bitmap_font.py"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Poppins-Regular.ttf"
+        "${CMAKE_CURRENT_SOURCE_DIR}/MaterialSymbolsSharp-Regular.ttf"
+        "${CMAKE_CURRENT_SOURCE_DIR}/MaterialSymbolsSharp_Filled-Regular.ttf"
+        "${CMAKE_CURRENT_SOURCE_DIR}/glyph_overrides.yaml"
+        COMMENT "Generating bitmap font header poppins_8.hpp"
+)
+
+add_custom_command(
         OUTPUT "${FONTS_INCLUDE_DIR}/fonts/poppins_12.hpp"
         COMMAND ${UV_EXECUTABLE} run python
         "${CMAKE_CURRENT_SOURCE_DIR}/generate_bitmap_font.py"
@@ -20,6 +38,7 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/glyph_overrides.yaml"
         COMMENT "Generating bitmap font header poppins_12.hpp"
 )
+
 add_custom_command(
         OUTPUT "${SYMBOLS_INCLUDE_DIR}/symbols.h"
         COMMAND ${UV_EXECUTABLE} run python "${CMAKE_CURRENT_SOURCE_DIR}/generate_glyph_header.py" "${CMAKE_CURRENT_SOURCE_DIR}/glyph_overrides.yaml" "${SYMBOLS_INCLUDE_DIR}/symbols.h"
@@ -31,6 +50,7 @@ add_custom_command(
 
 add_custom_target(generate_font_headers ALL
         DEPENDS
+        "${FONTS_INCLUDE_DIR}/fonts/poppins_8.hpp"
         "${FONTS_INCLUDE_DIR}/fonts/poppins_12.hpp"
         "${SYMBOLS_INCLUDE_DIR}/symbols.h"
 )

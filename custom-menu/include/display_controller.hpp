@@ -11,6 +11,7 @@
 #include "apps/app_api.hpp"
 #include "clay_fb_renderer.hpp"
 #include "fonts/poppins_12.hpp"
+#include "fonts/poppins_8.hpp"
 #include "hooked_functions.h"
 #include "stdfn_timer_helper.hpp"
 
@@ -34,7 +35,7 @@ class display_controller : display_controller_api {
                             .width = 128,
                             .buf_len = LCD_WIDTH * LCD_HEIGHT * sizeof(uint16_t),
                             .buf = secret_screen_buf };
-  font_registry_t font_registry{ &fonts::Poppins_12 };
+  font_registry_t font_registry{ &fonts::Poppins_12, &fonts::Poppins_8 };
 
   std::size_t clay_arena_size = Clay_MinMemorySize();
   std::unique_ptr<void, decltype(&std::free)> clay_arena_memory{ std::malloc(clay_arena_size), std::free };

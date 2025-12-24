@@ -61,16 +61,16 @@ overrides:
     verticalOffset: 1
 
   - name: TOGGLE_OFF
-    target: 0x0A
+    target: 0x0B
     replacement: 0xE9F5  # Toggle Off
     source: MaterialSymbolsSharp
 
   - name: TOGGLE_ON
-    target: 0x0B
+    target: 0x0C
     replacement: 0xE9F6  # Toggle On
     source: MaterialSymbolsSharp
 
   - name: REFRESH
-    target: 0x0C
+    target: 0x0D
     replacement: 0xE5D5  # Refresh
     source: MaterialSymbolsSharpFilled

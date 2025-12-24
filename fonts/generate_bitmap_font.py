@@ -35,21 +35,28 @@ def main():
             overrides_data = yaml.safe_load(f)
 
         source_fonts = {}
+        source_defaults = {}
         for src_name, src_cfg in overrides_data.get("sources", {}).items():
             src_path = args.overrides.parent / src_cfg["ttf"]["file"]
             source_fonts[src_name] = ImageFont.truetype(
                 str(src_path), src_cfg["ttf"]["size"]
             )
+            source_defaults[src_name] = src_cfg["ttf"].get("verticalOffset", 0)
 
         for ov in overrides_data.get("overrides", []):
             if chr(ov["target"]).isprintable():
                 warnings.warn(
                     f"Overriding printable character {ov['target']} ({chr(ov['target'])})"
                 )
+
+            # Determine vertical offset: override > source default > 0
+            v_offset = ov.get("verticalOffset", source_defaults.get(ov["source"], 0))
+
             overrides_map[ov["target"]] = {
                 "name": ov["name"],
                 "replacement": ov["replacement"],
                 "font": source_fonts[ov["source"]],
+                "verticalOffset": v_offset,
             }
 
     # Pre-render replacement glyph once
@@ -63,7 +70,7 @@ def main():
     # We keep a memo to reuse identical bitmaps (e.g. control codes)
     bitmap_cache = {}
 
-    def render_char(ch: str, font_to_use=font):
+    def render_char(ch: str, font_to_use=font, vertical_offset=0):
         # First, detect whitespace / empty glyphs using a simple mask
         raw_mask = font_to_use.getmask(ch, mode="L")
         if not raw_mask.getbbox():
@@ -99,7 +106,7 @@ def main():
             "height": gh,
             "bearingX": x0,
             # distance from baseline up to the top of the bitmap (positive)
-            "bearingY": -y0,
+            "bearingY": -y0 - vertical_offset,
             "advance": adv,
             "bitmap": bytes(bmp),
         }
@@ -108,7 +115,9 @@ def main():
         if code in overrides_map:
             ov = overrides_map[code]
             ch = chr(ov["replacement"])
-            g = render_char(ch, font_to_use=ov["font"])
+            g = render_char(
+                ch, font_to_use=ov["font"], vertical_offset=ov["verticalOffset"]
+            )
             g["comment"] = ov["name"]
         elif code < 32 or code == 127:
             ch = rep_char

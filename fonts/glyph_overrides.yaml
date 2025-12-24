@@ -3,6 +3,7 @@ sources:
     ttf:
       file: MaterialSymbolsSharp_Filled-Regular.ttf
       size: 12
+      verticalOffset: 2
 
 overrides:
   - name: ARROW_BACK
@@ -14,6 +15,7 @@ overrides:
     target: 0x02
     replacement: 0xE8AC  # Power Settings New
     source: MaterialSymbols
+    verticalOffset: 1
 
   - name: MENU
     target: 0x03
@@ -44,11 +46,13 @@ overrides:
     target: 0x08
     replacement: 0xE836  # Radio Button Unchecked
     source: MaterialSymbols
+    verticalOffset: 1
 
   - name: RADIO_BUTTON_CHECKED
     target: 0x09
     replacement: 0xE837  # Radio Button Checked
     source: MaterialSymbols
+    verticalOffset: 1
 
   - name: TOGGLE_OFF
     target: 0x0A

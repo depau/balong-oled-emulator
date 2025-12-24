@@ -56,12 +56,12 @@ overrides:
 
   - name: TOGGLE_OFF
     target: 0x0A
-    replacement: 0xF35E  # Toggle Off
+    replacement: 0xE9F5  # Toggle Off
     source: MaterialSymbols
 
   - name: TOGGLE_ON
     target: 0x0B
-    replacement: 0xF35F  # Toggle On
+    replacement: 0xE9F6  # Toggle On
     source: MaterialSymbols
 
   - name: REFRESH

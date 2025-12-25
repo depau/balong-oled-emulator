@@ -19,6 +19,7 @@ public:
 private:
   const actions_vector_t *actions;
   size_t active_entry = 0;
+  const std::string title = "Menu";
 
   void layout(display_controller_api &controller_api,
               Clay_TextElementConfig &textCfg,
@@ -27,11 +28,7 @@ private:
               const Clay_BorderElementConfig &activeBorderCfg) const {
     ROOT_ELEMENT(&controller_api, CLAY_TOP_TO_BOTTOM) {
       if (controller_api.get_screen_height() > 64) {
-        ui_add_header(&controller_api,
-                      "Main menu",
-                      &titleTextCfg,
-                      active_entry > 0,
-                      active_entry < actions->size() - 1);
+        ui_add_header(&controller_api, title, &titleTextCfg, active_entry > 0, active_entry < actions->size() - 1);
       }
 
       CLAY({
@@ -94,8 +91,10 @@ public:
    * Construct a new menu screen with the given list of options
    *
    * @param actions The menu entries to display
+   * @param title The title of the menu
    */
-  explicit menu_screen(const actions_vector_t &actions) : actions(&actions) {}
+  explicit menu_screen(const actions_vector_t &actions, const std::string &title = "Menu") :
+    actions(&actions), title(title) {}
 
   void render(display_controller_api &controller_api) override {
     auto textCfg = (Clay_TextElementConfig) {

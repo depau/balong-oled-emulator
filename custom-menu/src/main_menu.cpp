@@ -10,7 +10,7 @@
 _DECLARE_CPP_APP_INTERNAL(register_main_menu_app, main_menu_app_descriptor, "Main Menu", main_menu_app);
 
 main_menu_app::main_menu_app(const app_api_t controller_api) : session(*controller_api) {
-  menu_screen = &session.push_screen(std::make_unique<ui::screens::menu_screen>(actions));
+  menu_screen = &session.push_screen(std::make_unique<ui::screens::menu_screen>(actions, "Main menu"));
 }
 
 void main_menu_app::load_app_actions(display_controller &controller) {

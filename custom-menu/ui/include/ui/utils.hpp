@@ -66,7 +66,7 @@ inline void ui_add_header(app_api_t controller_api,
     .id = CLAY_ID("Header"),
     .layout = {
       .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
-      .padding = CLAY_PADDING_ALL(2),
+      .padding = { .left = 2, .right = 2, .bottom = 2 },
       .layoutDirection = CLAY_LEFT_TO_RIGHT,
     },
   }) {

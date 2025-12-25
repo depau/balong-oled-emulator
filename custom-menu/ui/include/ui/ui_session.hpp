@@ -42,7 +42,7 @@ public:
    */
   template<typename T>
   T &push_screen(std::unique_ptr<T> screen) {
-    static_assert(std::derived_from<T, screens::iscreen> == true);
+    static_assert(sdk19compat::derived_from<T, screens::iscreen> == true);
     screen_stack.push_back(std::move(screen));
     return *static_cast<T *>(screen_stack.back().get());
   }
@@ -54,7 +54,7 @@ public:
    */
   template<typename T>
   T &replace_screen(std::unique_ptr<T> screen) {
-    static_assert(std::derived_from<T, screens::iscreen> == true);
+    static_assert(sdk19compat::derived_from<T, screens::iscreen> == true);
     if (!screen_stack.empty()) {
       screen_stack.pop_back();
     }

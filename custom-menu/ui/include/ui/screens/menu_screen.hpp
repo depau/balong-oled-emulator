@@ -2,7 +2,13 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
 
+#include "clay.hpp"
 #include "debug.h"
 #include "hooked_functions.h"
 #include "ui/actions/button.hpp"

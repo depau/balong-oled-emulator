@@ -3076,10 +3076,14 @@ void Clay__CalculateFinalLayout(void) {
                 }
                 // This exists because the scissor needs to end _after_ borders between elements
                 if (closeClipElement) {
-                    Clay__AddRenderCommand(CLAY__INIT(Clay_RenderCommand) {
-                        .id = Clay__HashNumber(currentElement->id, rootElement->childrenOrTextContent.children.length + 11).id,
-                        .commandType = CLAY_RENDER_COMMAND_TYPE_SCISSOR_END,
-                    });
+                    Clay_LayoutElementHashMapItem *currentElementData = Clay__GetHashMapItem(currentElement->id);
+                    Clay_BoundingBox currentElementBoundingBox = currentElementData->boundingBox;
+                    if (!Clay__ElementIsOffscreen(&currentElementBoundingBox)) {
+                        Clay__AddRenderCommand(CLAY__INIT(Clay_RenderCommand) {
+                            .id = Clay__HashNumber(currentElement->id, rootElement->childrenOrTextContent.children.length + 11).id,
+                            .commandType = CLAY_RENDER_COMMAND_TYPE_SCISSOR_END,
+                        });
+                    }
                 }
 
                 dfsBuffer.length--;
@@ -4418,7 +4422,7 @@ void Clay_ResetMeasureTextCache(void) {
     context->measureTextHashMap.length = 0;
     context->measuredWords.length = 0;
     context->measuredWordsFreeList.length = 0;
-
+    
     for (int32_t i = 0; i < context->measureTextHashMap.capacity; ++i) {
         context->measureTextHashMap.internalArray[i] = 0;
     }

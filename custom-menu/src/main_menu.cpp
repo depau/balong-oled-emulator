@@ -1,5 +1,4 @@
 #include <iostream>
-#include <ranges>
 
 #include "apps/app_api.hpp"
 #include "display_controller.hpp"
@@ -21,7 +20,8 @@ void main_menu_app::load_app_actions(display_controller &controller) {
   }));
 
   int index = 0;
-  for (const auto &descriptor : controller.get_apps() | std::views::keys) {
+  for (const auto &kv : controller.get_apps()) {
+    const auto &[descriptor, _] = kv;
     if (index == 0) {
       ++index;
       continue; // skip main menu itself

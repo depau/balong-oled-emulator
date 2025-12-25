@@ -19,6 +19,7 @@ target_link_libraries(balong_custom_menu PRIVATE
 )
 target_compile_options(balong_custom_menu PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
 target_link_options(balong_custom_menu PRIVATE "-Wl,--exclude-libs,ALL")
+target_compile_definitions(balong_custom_menu PRIVATE INSTALL_PREFIX=\"${CMAKE_INSTALL_PREFIX}\")
 apply_common_settings(balong_custom_menu)
 add_dependencies(
         generate_font_headers

@@ -25,10 +25,11 @@ private:
               Clay_TextElementConfig &textCfg,
               Clay_TextElementConfig &activeTextCfg,
               Clay_TextElementConfig &titleTextCfg,
-              const Clay_BorderElementConfig &activeBorderCfg) const {
+              const Clay_BorderElementConfig &activeBorderCfg,
+              const bool can_scroll_up = true) const {
     ROOT_ELEMENT(&controller_api, CLAY_TOP_TO_BOTTOM) {
       if (controller_api.get_screen_height() > 64) {
-        ui_add_header(&controller_api, title, &titleTextCfg, active_entry > 0, active_entry < actions->size() - 1);
+        ui_add_header(&controller_api, title, &titleTextCfg, can_scroll_up, active_entry < actions->size() - 1);
       }
 
       CLAY(CLAY_ID("ScrollLayout"), {
@@ -147,10 +148,12 @@ public:
     assert(scroll_info.found);
     assert(active_entry_info.found);
 
+    bool can_scroll_up = false;
     if (active_entry_offset_from_top + active_entry_info.boundingBox.height >
         scroll_info.scrollContainerDimensions.height) {
       scroll_info.scrollPosition->y = -active_entry_offset_from_top - active_entry_info.boundingBox.height +
                                       scroll_info.scrollContainerDimensions.height;
+      can_scroll_up = true;
     } else {
       scroll_info.scrollPosition->y = 0;
     }
@@ -158,7 +161,7 @@ public:
 
     // Now lay out again with the correct scroll position
     Clay_BeginLayout();
-    layout(controller_api, textCfg, activeTextCfg, titleTextCfg, activeBorderCfg);
+    layout(controller_api, textCfg, activeTextCfg, titleTextCfg, activeBorderCfg, can_scroll_up);
     controller_api.clay_render(Clay_EndLayout());
   }
 

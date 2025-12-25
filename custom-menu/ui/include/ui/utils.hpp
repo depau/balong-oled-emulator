@@ -146,7 +146,8 @@ inline void ui_add_footer(Clay_TextElementConfig *textCfg, const bool can_press_
     .id = CLAY_ID("Footer"),
     .layout = {
       .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
-      .padding = CLAY_PADDING_ALL(ROOT_PADDING),
+      .padding = { .top = ROOT_PADDING },
+      .childGap = 4,
       .childAlignment = {
         .x = CLAY_ALIGN_X_CENTER,
         .y = CLAY_ALIGN_Y_CENTER,

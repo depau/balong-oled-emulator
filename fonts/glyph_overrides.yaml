@@ -21,7 +21,6 @@ overrides:
     target: 0x02
     replacement: 0xE8AC  # Power Settings New
     source: MaterialSymbolsSharpFilled
-    verticalOffset: 1
 
   - name: MENU
     target: 0x03

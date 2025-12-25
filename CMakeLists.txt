@@ -11,7 +11,9 @@ option(STRIP "Strip symbols from the final binaries to reduce size" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 
-set(CMAKE_INSTALL_PREFIX "/app/hijack" CACHE PATH "Installation prefix")
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "/app/hijack")
+endif()
 
 set(COMMON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 

@@ -26,11 +26,9 @@ void main_menu_app::load_app_actions(display_controller &controller) {
       ++index;
       continue; // skip main menu itself
     }
-    for (int i = 0; i < 4; i++) {
-      actions.emplace_back(std::make_unique<ui::actions::button>(descriptor.name, [&controller, index] {
-        controller.set_active_app(index);
-      }));
-    }
+    actions.emplace_back(std::make_unique<ui::actions::button>(descriptor.name, [&controller, index] {
+      controller.set_active_app(index);
+    }));
     ++index;
   }
   debugf("registered %zu main menu actions\n", actions.size());

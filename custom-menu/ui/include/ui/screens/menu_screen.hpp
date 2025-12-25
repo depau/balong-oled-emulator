@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 
 #include "debug.h"
@@ -19,6 +20,73 @@ private:
   const actions_vector_t *actions;
   size_t active_entry = 0;
 
+  void layout(display_controller_api &controller_api,
+              Clay_TextElementConfig &textCfg,
+              Clay_TextElementConfig &activeTextCfg,
+              Clay_TextElementConfig &titleTextCfg,
+              const Clay_BorderElementConfig &activeBorderCfg) const {
+    ROOT_ELEMENT(&controller_api, CLAY_TOP_TO_BOTTOM) {
+      if (controller_api.get_screen_height() > 64) {
+        ui_add_header(&controller_api,
+                      "Main menu",
+                      &titleTextCfg,
+                      active_entry > 0,
+                      active_entry < actions->size() - 1);
+      }
+
+      CLAY({
+        .id = CLAY_ID("ScrollLayout"),
+        .layout = {
+          .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
+          .childGap = ROOT_PADDING,
+          .layoutDirection = CLAY_TOP_TO_BOTTOM,
+        },
+        .clip = {
+          .horizontal = false,
+          .vertical = true,
+          .childOffset = Clay_GetScrollOffset()
+        },
+      }) {
+        size_t index = 0;
+        for (const auto &action : *actions) {
+          debugf("menu entry: %s\n", action->get_text().c_str());
+
+          if (index == active_entry) {
+            CLAY({
+              .id = CLAY_ID("ActiveMenuEntry"),
+              .layout = {
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
+                .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
+              },
+              .backgroundColor = theme::COLOR_ACTIVE_BACKGROUND,
+              .clip = { .horizontal =  true, .vertical = false },
+              .border = activeBorderCfg,
+            }) {
+              CLAY_TEXT(to_clay_string(action->get_text()), &activeTextCfg);
+            }
+          } else {
+            CLAY({
+              .id = CLAY_IDI("MenuEntry", static_cast<uint32_t>(index)),
+              .layout = {
+                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
+                .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
+              },
+              .backgroundColor = theme::COLOR_BACKGROUND,
+              .clip = { .horizontal =  true, .vertical = false },
+            }) {
+              CLAY_TEXT(to_clay_string(action->get_text()), &textCfg);
+            }
+          }
+          index++;
+        }
+      }
+
+      if (controller_api.get_screen_height() > 64) {
+        ui_add_footer(&titleTextCfg, true, true);
+      }
+    }
+  }
+
 public:
   menu_screen() = default;
 
@@ -30,8 +98,6 @@ public:
   explicit menu_screen(const actions_vector_t &actions) : actions(&actions) {}
 
   void render(display_controller_api &controller_api) override {
-    Clay_BeginLayout();
-
     auto textCfg = (Clay_TextElementConfig) {
       .textColor = ui::theme::COLOR_TEXT,
       .fontId = controller_api.get_font(theme::FONT_NAME_TEXT, theme::FONT_SIZE_TEXT).value_or(0),
@@ -69,66 +135,34 @@ public:
                  0 },
     };
 
-    ROOT_ELEMENT(&controller_api, CLAY_TOP_TO_BOTTOM) {
-      if (controller_api.get_screen_height() > 64) {
-        ui_add_header(&controller_api,
-                      "Main menu",
-                      &titleTextCfg,
-                      active_entry > 0,
-                      active_entry < actions->size() - 1);
-      }
+    // Lay out once to compute scroll positions
+    Clay_BeginLayout();
+    layout(controller_api, textCfg, activeTextCfg, titleTextCfg, activeBorderCfg);
 
-      CLAY({
-        .layout = {
-          .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
-          .childGap = ROOT_PADDING,
-          .layoutDirection = CLAY_TOP_TO_BOTTOM,
-        },
-        .clip = {
-          .horizontal = false,
-          .vertical = true,
-        }
-      }) {
-        size_t index = 0;
-        for (const auto &action : *actions) {
-          debugf("menu entry: %s\n", action->get_text().c_str());
-
-          if (index++ == active_entry) {
-            CLAY({
-              .layout = {
-                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
-                .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
-              },
-              .backgroundColor = theme::COLOR_ACTIVE_BACKGROUND,
-              .clip = { .horizontal =  true, .vertical = false },
-              .border = activeBorderCfg,
-            }) {
-              // BOUNDING_BOX {
-              CLAY_TEXT(to_clay_string(action->get_text()), &activeTextCfg);
-              // }
-            }
-          } else {
-            CLAY({
-              .layout = {
-                .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
-                .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
-              },
-              .backgroundColor = theme::COLOR_BACKGROUND,
-              .clip = { .horizontal =  true, .vertical = false },
-            }) {
-              // BOUNDING_BOX {
-              CLAY_TEXT(to_clay_string(action->get_text()), &textCfg);
-              // }
-            }
-          }
-        }
-      }
-
-      if (controller_api.get_screen_height() > 64) {
-        ui_add_footer(&titleTextCfg, true, true);
-      }
+    float active_entry_offset_from_top = 0.0f;
+    for (size_t i = 0; i < active_entry; i++) {
+      const auto [boundingBox, found] = Clay_GetElementData(CLAY_IDI("MenuEntry", static_cast<uint32_t>(i)));
+      assert(found);
+      active_entry_offset_from_top += boundingBox.height + ROOT_PADDING;
     }
 
+    const Clay_ScrollContainerData scroll_info = Clay_GetScrollContainerData(CLAY_ID("ScrollLayout"));
+    const Clay_ElementData active_entry_info = Clay_GetElementData(CLAY_ID("ActiveMenuEntry"));
+    assert(scroll_info.found);
+    assert(active_entry_info.found);
+
+    if (active_entry_offset_from_top + active_entry_info.boundingBox.height >
+        scroll_info.scrollContainerDimensions.height) {
+      scroll_info.scrollPosition->y = -active_entry_offset_from_top - active_entry_info.boundingBox.height +
+                                      scroll_info.scrollContainerDimensions.height;
+    } else {
+      scroll_info.scrollPosition->y = 0;
+    }
+    Clay_EndLayout();
+
+    // Now lay out again with the correct scroll position
+    Clay_BeginLayout();
+    layout(controller_api, textCfg, activeTextCfg, titleTextCfg, activeBorderCfg);
     controller_api.clay_render(Clay_EndLayout());
   }
 

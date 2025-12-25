@@ -38,13 +38,13 @@ inline void ui_horizontal_line(Clay_Color color,
                                const float box_height,
                                const Clay_Padding padding = CLAY_PADDING_ALL(0),
                                const float thickness = 1) {
-  CLAY_AUTO_ID({
+  CLAY(CLAY_ID("HorizontalLine"), {
     .layout = {
       .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(box_height) },
       .padding = padding,
     },
   }) {
-    CLAY_AUTO_ID({
+    CLAY(CLAY_ID("HorizontalLineChild"), {
      .layout = {
        .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(thickness) },
      },
@@ -78,15 +78,16 @@ inline void ui_add_header(app_api_t controller_api,
     };
     CLAY_TEXT(headerText, textCfg);
 
+    // Left horizontal line
     const bool scroll = can_scroll_up || can_scroll_down;
     const auto [caretWidth, caretHeight] = controller_api->clay_measure_text(GLYPH_CARET_UP, textCfg);
-    CLAY_AUTO_ID({
+    CLAY(CLAY_ID("HeaderRightLine"), {
       .layout = {
         .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(textHeight) },
         .padding = {4, static_cast<uint16_t>(scroll ? caretWidth - 2 : 0), static_cast<uint16_t>(textHeight / 2), 0},
       },
     }) {
-      CLAY_AUTO_ID({
+      CLAY(CLAY_ID("HeaderRightLineChild"), {
        .layout = {
          .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(1) },
        },
@@ -95,7 +96,7 @@ inline void ui_add_header(app_api_t controller_api,
       }
 
       if (can_scroll_up) {
-        CLAY_AUTO_ID({
+        CLAY(CLAY_ID("CaretUp"), {
           .layout = {
             .sizing = { CLAY_SIZING_FIXED(caretWidth - 2), CLAY_SIZING_FIXED(caretHeight) },
           },
@@ -116,7 +117,7 @@ inline void ui_add_header(app_api_t controller_api,
       }
 
       if (can_scroll_down) {
-        CLAY_AUTO_ID({
+        CLAY(CLAY_ID("CaretDown"), {
           .layout = {
             .sizing = { CLAY_SIZING_FIXED(caretWidth - 2), CLAY_SIZING_FIXED(caretHeight) },
           },

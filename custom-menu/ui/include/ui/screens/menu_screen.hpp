@@ -45,8 +45,6 @@ private:
       }) {
         size_t index = 0;
         for (const auto &action : *actions) {
-          debugf("menu entry: %s\n", action->get_text().c_str());
-
           if (index == active_entry) {
             CLAY(CLAY_ID("ActiveMenuEntry"), {
               .layout = {

@@ -31,8 +31,7 @@ public:
       .textAlignment = CLAY_TEXT_ALIGN_LEFT,
     };
 
-    CLAY({
-      .id = CLAY_ID("Root"),
+    CLAY(CLAY_ID("Root"), {
         .layout = {
             .sizing = { CLAY_SIZING_FIXED(128), CLAY_SIZING_FIXED(128) },
             .padding = CLAY_PADDING_ALL(4),
@@ -41,8 +40,7 @@ public:
         },
         .backgroundColor = COLOR_BG, // RECTANGLE
     }) {
-      CLAY({
-        .id = CLAY_ID("Header"),
+      CLAY(CLAY_ID("Header"), {
         .layout = {
             .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(20) },
             .padding = CLAY_PADDING_ALL(2),
@@ -54,8 +52,7 @@ public:
         CLAY_TEXT(hello, &textCfg); // TEXT
       }
 
-      CLAY({
-        .id = CLAY_ID("Symbols demo"),
+      CLAY(CLAY_ID("Symbols demo"), {
         .layout = {
             .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT() },
             .padding = CLAY_PADDING_ALL(2),

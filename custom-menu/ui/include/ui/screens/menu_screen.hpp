@@ -31,8 +31,7 @@ private:
         ui_add_header(&controller_api, title, &titleTextCfg, active_entry > 0, active_entry < actions->size() - 1);
       }
 
-      CLAY({
-        .id = CLAY_ID("ScrollLayout"),
+      CLAY(CLAY_ID("ScrollLayout"), {
         .layout = {
           .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
           .childGap = ROOT_PADDING,
@@ -49,8 +48,7 @@ private:
           debugf("menu entry: %s\n", action->get_text().c_str());
 
           if (index == active_entry) {
-            CLAY({
-              .id = CLAY_ID("ActiveMenuEntry"),
+            CLAY(CLAY_ID("ActiveMenuEntry"), {
               .layout = {
                 .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
                 .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
@@ -62,8 +60,7 @@ private:
               CLAY_TEXT(to_clay_string(action->get_text()), &activeTextCfg);
             }
           } else {
-            CLAY({
-              .id = CLAY_IDI("MenuEntry", static_cast<uint32_t>(index)),
+            CLAY(CLAY_IDI("MenuEntry", static_cast<uint32_t>(index)), {
               .layout = {
                 .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
                 .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),

@@ -38,7 +38,7 @@ class matrix_app {
       for (matrix_text_entry &entry : matrix_seq) {
 
         for (const int y : { entry.y, entry.y - 256 }) {
-          CLAY({
+          CLAY_AUTO_ID({
             .floating = (Clay_FloatingElementConfig) {
               .offset = {
                 .x = static_cast<float>(entry.x),

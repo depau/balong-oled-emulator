@@ -5,8 +5,7 @@
 #include "ui/ui_theme.hpp"
 
 #define ROOT_ELEMENT(_ctrl, _dir) \
-  CLAY({                                                                      \
-    .id = CLAY_ID("Root"),                                                    \
+  CLAY(CLAY_ID("Root"), {                                                     \
       .layout = {                                                             \
         .sizing = {                                                           \
           CLAY_SIZING_FIXED(static_cast<float>((_ctrl)->get_screen_width())), \
@@ -39,13 +38,13 @@ inline void ui_horizontal_line(Clay_Color color,
                                const float box_height,
                                const Clay_Padding padding = CLAY_PADDING_ALL(0),
                                const float thickness = 1) {
-  CLAY({
-  .layout = {
-    .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(box_height) },
-    .padding = padding,
-  },
-}) {
-    CLAY({
+  CLAY_AUTO_ID({
+    .layout = {
+      .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(box_height) },
+      .padding = padding,
+    },
+  }) {
+    CLAY_AUTO_ID({
      .layout = {
        .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(thickness) },
      },
@@ -62,8 +61,7 @@ inline void ui_add_header(app_api_t controller_api,
                           const bool can_scroll_down = false) {
   const auto [textWidth, textHeight] = controller_api->clay_measure_text(title, textCfg);
 
-  CLAY({
-    .id = CLAY_ID("Header"),
+  CLAY(CLAY_ID("Header"), {
     .layout = {
       .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
       .padding = { .left = 2, .right = 2, .bottom = 2 },
@@ -82,13 +80,13 @@ inline void ui_add_header(app_api_t controller_api,
 
     const bool scroll = can_scroll_up || can_scroll_down;
     const auto [caretWidth, caretHeight] = controller_api->clay_measure_text(GLYPH_CARET_UP, textCfg);
-    CLAY({
+    CLAY_AUTO_ID({
       .layout = {
         .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(textHeight) },
         .padding = {4, static_cast<uint16_t>(scroll ? caretWidth - 2 : 0), static_cast<uint16_t>(textHeight / 2), 0},
       },
     }) {
-      CLAY({
+      CLAY_AUTO_ID({
        .layout = {
          .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIXED(1) },
        },
@@ -97,7 +95,7 @@ inline void ui_add_header(app_api_t controller_api,
       }
 
       if (can_scroll_up) {
-        CLAY({
+        CLAY_AUTO_ID({
           .layout = {
             .sizing = { CLAY_SIZING_FIXED(caretWidth - 2), CLAY_SIZING_FIXED(caretHeight) },
           },
@@ -118,7 +116,7 @@ inline void ui_add_header(app_api_t controller_api,
       }
 
       if (can_scroll_down) {
-        CLAY({
+        CLAY_AUTO_ID({
           .layout = {
             .sizing = { CLAY_SIZING_FIXED(caretWidth - 2), CLAY_SIZING_FIXED(caretHeight) },
           },
@@ -142,8 +140,7 @@ inline void ui_add_header(app_api_t controller_api,
 }
 
 inline void ui_add_footer(Clay_TextElementConfig *textCfg, const bool can_press_menu, const bool can_press_power) {
-  CLAY({
-    .id = CLAY_ID("Footer"),
+  CLAY(CLAY_ID("Footer"), {
     .layout = {
       .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
       .padding = { .top = ROOT_PADDING },

@@ -9,3 +9,5 @@ target_include_directories(ui PRIVATE
         include
 )
 apply_common_settings(ui)
+
+install(TARGETS ui DESTINATION lib)

@@ -28,5 +28,7 @@ if (DEBUG_HOST)
     target_compile_definitions(balong_custom_menu PRIVATE DEBUG_HOST=1)
 endif ()
 
+install(TARGETS balong_custom_menu DESTINATION lib)
+
 add_subdirectory(ui)
 add_subdirectory(apps)

@@ -25,3 +25,6 @@ target_link_libraries(balong_oled_emulator PRIVATE
         hooks
 )
 apply_common_settings(balong_oled_emulator)
+
+install(TARGETS balong_oled_emulator DESTINATION bin)
+install(TARGETS hooks DESTINATION lib)

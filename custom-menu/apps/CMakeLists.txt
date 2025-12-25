@@ -37,6 +37,8 @@ function(custom_menu_add_app option order target)
             ${target}
             generate_font_headers
     )
+
+    install(TARGETS ${target} DESTINATION apps)
 endfunction()
 
 option(APPS_HELLO_WORLD "Build Hello World App" ON)

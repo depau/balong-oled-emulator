@@ -299,53 +299,59 @@ public:
 
       switch (cmd.commandType) {
       case CLAY_RENDER_COMMAND_TYPE_NONE:
-        render_debugf("render command: none\n");
+        render_debugf("render command: %*s none\n", static_cast<int>(scissorStack.size()) * 2, "");
         break;
 
       case CLAY_RENDER_COMMAND_TYPE_RECTANGLE: {
-        render_debugf("render command: rectangle[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
-               bb.x,
-               bb.y,
-               bb.w,
-               bb.h,
-               static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.r),
-               static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.g),
-               static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.b),
-               static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.a));
+        render_debugf("render command: %*s rectangle[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
+                      static_cast<int>(scissorStack.size()) * 2,
+                      "",
+                      bb.x,
+                      bb.y,
+                      bb.w,
+                      bb.h,
+                      static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.r),
+                      static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.g),
+                      static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.b),
+                      static_cast<uint8_t>(cmd.renderData.rectangle.backgroundColor.a));
         std::uint16_t color = pack_bgr565(cmd.renderData.rectangle.backgroundColor);
         fillRect(bb, currentClip(), color, true);
         break;
       }
 
       case CLAY_RENDER_COMMAND_TYPE_BORDER: {
-        render_debugf("render command: border[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
-               bb.x,
-               bb.y,
-               bb.w,
-               bb.h,
-               static_cast<uint8_t>(cmd.renderData.border.color.r),
-               static_cast<uint8_t>(cmd.renderData.border.color.g),
-               static_cast<uint8_t>(cmd.renderData.border.color.b),
-               static_cast<uint8_t>(cmd.renderData.border.color.a));
+        render_debugf("render command: %*s border[%d, %d, %d, %d] - color: #%02X%02X%02X%02X\n",
+                      static_cast<int>(scissorStack.size()) * 2,
+                      "",
+                      bb.x,
+                      bb.y,
+                      bb.w,
+                      bb.h,
+                      static_cast<uint8_t>(cmd.renderData.border.color.r),
+                      static_cast<uint8_t>(cmd.renderData.border.color.g),
+                      static_cast<uint8_t>(cmd.renderData.border.color.b),
+                      static_cast<uint8_t>(cmd.renderData.border.color.a));
         strokeBorder(bb, currentClip(), cmd.renderData.border);
         break;
       }
 
       case CLAY_RENDER_COMMAND_TYPE_TEXT: {
-        render_debugf("render command: text[%d, %d, %d, %d] - text: \"%.*s\", fontId: %d, fontSize: %d, color: "
-               "#%02X%02X%02X%02X\n",
-               bb.x,
-               bb.y,
-               bb.w,
-               bb.h,
-               static_cast<int>(cmd.renderData.text.stringContents.length),
-               cmd.renderData.text.stringContents.chars,
-               cmd.renderData.text.fontId,
-               cmd.renderData.text.fontSize,
-               static_cast<uint8_t>(cmd.renderData.text.textColor.r),
-               static_cast<uint8_t>(cmd.renderData.text.textColor.g),
-               static_cast<uint8_t>(cmd.renderData.text.textColor.b),
-               static_cast<uint8_t>(cmd.renderData.text.textColor.a));
+        render_debugf("render command: %*s text[%d, %d, %d, %d] - text: \"%.*s\", fontId: %d, fontSize: %d, color: "
+                      "#%02X%02X%02X%02X\n",
+                      static_cast<int>(scissorStack.size()) * 2,
+                      "",
+                      bb.x,
+                      bb.y,
+                      bb.w,
+                      bb.h,
+                      static_cast<int>(cmd.renderData.text.stringContents.length),
+                      cmd.renderData.text.stringContents.chars,
+                      cmd.renderData.text.fontId,
+                      cmd.renderData.text.fontSize,
+                      static_cast<uint8_t>(cmd.renderData.text.textColor.r),
+                      static_cast<uint8_t>(cmd.renderData.text.textColor.g),
+                      static_cast<uint8_t>(cmd.renderData.text.textColor.b),
+                      static_cast<uint8_t>(cmd.renderData.text.textColor.a));
         const auto &t = cmd.renderData.text;
         const BitmapFont *font = getFont(t.fontId, t.fontSize);
         if (!font)
@@ -355,12 +361,18 @@ public:
       }
 
       case CLAY_RENDER_COMMAND_TYPE_IMAGE:
-        render_debugf("render command: image\n");
+        render_debugf("render command: %*s image\n", static_cast<int>(scissorStack.size()) * 2, "");
         // Not used in this example; can be implemented similarly
         break;
 
       case CLAY_RENDER_COMMAND_TYPE_SCISSOR_START: {
-        render_debugf("render command: scissorStart[%d, %d, %d, %d]\n", bb.x, bb.y, bb.w, bb.h);
+        render_debugf("render command: %*s scissorStart[%d, %d, %d, %d]\n",
+                      static_cast<int>(scissorStack.size()) * 2,
+                      "",
+                      bb.x,
+                      bb.y,
+                      bb.w,
+                      bb.h);
         IntRect newClip = bb;
         if (!scissorStack.empty()) {
           IntRect merged;
@@ -376,14 +388,14 @@ public:
       }
 
       case CLAY_RENDER_COMMAND_TYPE_SCISSOR_END: {
-        render_debugf("render command: scissorEnd\n");
         if (!scissorStack.empty())
           scissorStack.pop_back();
+        render_debugf("render command: %*s scissorEnd\n", static_cast<int>(scissorStack.size()) * 2, "");
         break;
       }
 
       case CLAY_RENDER_COMMAND_TYPE_CUSTOM:
-        render_debugf("render command: custom\n");
+        render_debugf("render command: %*s custom\n", static_cast<int>(scissorStack.size()) * 2, "");
         break;
       }
     }

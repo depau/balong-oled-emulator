@@ -146,28 +146,23 @@ inline void ui_add_footer(Clay_TextElementConfig *textCfg, const bool can_press_
     .id = CLAY_ID("Footer"),
     .layout = {
       .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
-      .padding = CLAY_PADDING_ALL(2),
-      .layoutDirection = CLAY_TOP_TO_BOTTOM,
+      .padding = CLAY_PADDING_ALL(ROOT_PADDING),
+      .childAlignment = {
+        .x = CLAY_ALIGN_X_CENTER,
+        .y = CLAY_ALIGN_Y_CENTER,
+      },
+      .layoutDirection = CLAY_LEFT_TO_RIGHT,
     },
+    .border = {
+      .color = ui::theme::COLOR_TEXT,
+      .width = { .top = 1 },
+    }
   }) {
-    ui_horizontal_line(ui::theme::COLOR_TEXT, 1);
-
-    CLAY({
-      .layout = {
-        .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_FIT() },
-        .childAlignment = {
-          .x = CLAY_ALIGN_X_CENTER,
-          .y = CLAY_ALIGN_Y_CENTER,
-        },
-        .layoutDirection = CLAY_LEFT_TO_RIGHT,
-      }
-    }) {
-      if (can_press_menu) {
-        CLAY_TEXT(CLAY_STRING_CONST(GLYPH_MENU " Next"), textCfg);
-      }
-      if (can_press_power) {
-        CLAY_TEXT(CLAY_STRING_CONST(GLYPH_POWER_BUTTON " Select"), textCfg);
-      }
+    if (can_press_menu) {
+      CLAY_TEXT(CLAY_STRING_CONST(GLYPH_MENU " Next"), textCfg);
+    }
+    if (can_press_power) {
+      CLAY_TEXT(CLAY_STRING_CONST(GLYPH_POWER_BUTTON " Select"), textCfg);
     }
   }
 }

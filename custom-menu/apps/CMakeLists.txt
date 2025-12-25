@@ -41,11 +41,11 @@ function(custom_menu_add_app option order target)
     install(TARGETS ${target} DESTINATION apps)
 endfunction()
 
-option(APPS_HELLO_WORLD "Build Hello World App" ON)
-set(APPS_HELLO_WORLD_ORDER 0 CACHE STRING "Order of Hello World App in Menu")
-
 option(APPS_MATRIX "Build Matrix App" ON)
-set(APPS_MATRIX_ORDER 1 CACHE STRING "Order of Matrix App in Menu")
+set(APPS_MATRIX_ORDER 998 CACHE STRING "Order of Matrix App in Menu")
+
+option(APPS_HELLO_WORLD "Build Hello World App" ON)
+set(APPS_HELLO_WORLD_ORDER 999 CACHE STRING "Order of Hello World App in Menu")
 
 custom_menu_add_app(APPS_HELLO_WORLD ${APPS_HELLO_WORLD_ORDER} hello_world)
 custom_menu_add_app(APPS_MATRIX ${APPS_MATRIX_ORDER} matrix)

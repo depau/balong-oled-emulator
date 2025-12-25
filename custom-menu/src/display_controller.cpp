@@ -170,7 +170,7 @@ std::vector<std::string> display_controller::get_app_lookup_paths() {
     app_lookup_paths.emplace_back(APP_LOOKUP_PATH);
 #endif
 #ifdef INSTALL_PREFIX
-    app_lookup_paths.emplace_back(std::string(INSTALL_PREFIX) + "/apps/");
+    app_lookup_paths.emplace_back(std::string(INSTALL_PREFIX "/apps/"));
 #endif
   }
   return app_lookup_paths;

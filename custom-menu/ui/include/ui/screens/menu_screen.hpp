@@ -35,7 +35,6 @@ private:
       CLAY(CLAY_ID("ScrollLayout"), {
         .layout = {
           .sizing = { CLAY_SIZING_GROW(), CLAY_SIZING_GROW() },
-          .childGap = ROOT_PADDING,
           .layoutDirection = CLAY_TOP_TO_BOTTOM,
         },
         .clip = {
@@ -140,7 +139,7 @@ public:
     for (size_t i = 0; i < active_entry; i++) {
       const auto [boundingBox, found] = Clay_GetElementData(CLAY_IDI("MenuEntry", static_cast<uint32_t>(i)));
       assert(found);
-      active_entry_offset_from_top += boundingBox.height + ROOT_PADDING;
+      active_entry_offset_from_top += boundingBox.height;
     }
 
     const Clay_ScrollContainerData scroll_info = Clay_GetScrollContainerData(CLAY_ID("ScrollLayout"));

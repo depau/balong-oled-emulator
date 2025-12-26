@@ -1,10 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <span>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "app_api.h"
 #include "sdk19compat.hpp"
@@ -270,3 +272,72 @@ consteval app_on_keypress_fn_t get_on_keypress_ptr() {
  * @param _class The app class name
  */
 #define DECLARE_CPP_APP(_name, _class) _DECLARE_CPP_APP_INTERNAL(REGISTER_APP_FN, APP_DESCRIPTOR, _name, _class)
+
+template<size_t N>
+struct StringLiteral {
+  constexpr StringLiteral(const char (&str)[N]) {
+    std::copy_n(str, N, value);
+    value[N] = '\0';
+  }
+
+  char value[N + 1];
+};
+
+/**
+ * Base class for binding apps
+ *
+ * @tparam Child The derived class
+ * @tparam Adapter The adapter class that interfaces with the app
+ * @tparam Ext The file extension for the loaded apps
+ */
+template<typename Child, typename Adapter, StringLiteral Ext>
+class binding_app {
+public:
+  static constexpr auto file_ext = Ext.value;
+  using adapter_t = Adapter;
+
+private:
+  std::vector<app_descriptor> descriptors;
+
+  static void adapter_teardown(void *userptr, const app_api_t controller_api) {
+    if (userptr == nullptr)
+      return;
+    auto *adapter = static_cast<Adapter *>(userptr);
+    adapter->teardown();
+    delete adapter;
+  }
+
+  static app_descriptor *
+  load_app_wrapper(void *userptr, const app_api_t controller_api, const char *app_path, void **app_userptr) {
+    return static_cast<Child *>(userptr)->load_app(controller_api, app_path, app_userptr);
+  }
+
+public:
+  binding_app() = default;
+
+  explicit binding_app(app_api_t controller_api) {
+    controller_api->register_app_loader(file_ext, &load_app_wrapper, this);
+  }
+
+protected:
+  app_descriptor *build_descriptor(const char *app_name,
+                                   const app_on_enter_fn_t on_enter,
+                                   const app_on_leave_fn_t on_leave,
+                                   const app_on_keypress_fn_t on_keypress) {
+    descriptors.push_back({
+      .name = app_name,
+      .on_teardown = &adapter_teardown,
+      .on_enter = on_enter,
+      .on_leave = on_leave,
+      .on_keypress = on_keypress,
+    });
+    return &descriptors.back();
+  }
+
+  app_descriptor *build_descriptor(const char *app_name) {
+    return build_descriptor(app_name,
+                            get_on_enter_ptr<Adapter>(),
+                            get_on_leave_ptr<Adapter>(),
+                            get_on_keypress_ptr<Adapter>());
+  }
+};

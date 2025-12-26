@@ -40,24 +40,24 @@ overrides:
   - name: CHECKBOX_UNCHECKED
     target: 0x06
     replacement: 0xE835  # Check Box Outline Blank
-    source: MaterialSymbolsSharpFilled
+    source: MaterialSymbolsSharp
 
   - name: CHECKBOX_CHECKED
     target: 0x07
     replacement: 0xE834  # Check Box
-    source: MaterialSymbolsSharpFilled
+    source: MaterialSymbolsSharp
 
   - name: RADIO_BUTTON_UNCHECKED
     target: 0x08
     replacement: 0xE836  # Radio Button Unchecked
     source: MaterialSymbolsSharpFilled
-    verticalOffset: 1
+    verticalOffset: 2
 
   - name: RADIO_BUTTON_CHECKED
     target: 0x09
     replacement: 0xE837  # Radio Button Checked
     source: MaterialSymbolsSharpFilled
-    verticalOffset: 1
+    verticalOffset: 2
 
   - name: TOGGLE_OFF
     target: 0x0B

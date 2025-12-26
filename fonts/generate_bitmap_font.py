@@ -3,6 +3,8 @@
 import argparse
 import subprocess
 import warnings
+from collections import defaultdict
+from email.policy import default
 from pathlib import Path
 
 import yaml
@@ -36,13 +38,14 @@ def main():
             overrides_data = yaml.safe_load(f)
 
         source_fonts = {}
-        source_defaults = {}
+        source_defaults = defaultdict(dict)
         for src_name, src_cfg in overrides_data.get("sources", {}).items():
             src_path = args.overrides.parent / src_cfg["ttf"]["file"]
             source_fonts[src_name] = ImageFont.truetype(
-                str(src_path), src_cfg["ttf"]["size"]
+                str(src_path), src_cfg["ttf"].get("size", args.size)
             )
-            source_defaults[src_name] = src_cfg["ttf"].get("verticalOffset", 0)
+            source_defaults[src_name]["verticalOffset"] = src_cfg["ttf"].get("verticalOffset", 0)
+            source_defaults[src_name]["horizontalOffset"] = src_cfg["ttf"].get("horizontalOffset", 0)
 
         for ov in overrides_data.get("overrides", []):
             if chr(ov["target"]).isprintable():
@@ -51,13 +54,15 @@ def main():
                 )
 
             # Determine vertical offset: override > source default > 0
-            v_offset = ov.get("verticalOffset", source_defaults.get(ov["source"], 0))
+            v_offset = ov.get("verticalOffset", source_defaults[ov["source"]].get("verticalOffset", 0))
+            h_offset = ov.get("horizontalOffset", source_defaults[ov["source"]].get("horizontalOffset", 0))
 
             overrides_map[ov["target"]] = {
                 "name": ov["name"],
                 "replacement": ov["replacement"],
                 "font": source_fonts[ov["source"]],
                 "verticalOffset": v_offset,
+                "horizontalOffset": h_offset,
             }
 
     # Pre-render replacement glyph once
@@ -71,7 +76,7 @@ def main():
     # We keep a memo to reuse identical bitmaps (e.g. control codes)
     bitmap_cache = {}
 
-    def render_char(ch: str, font_to_use=font, vertical_offset=0):
+    def render_char(ch: str, font_to_use=font, vertical_offset=0, horizontal_offset=0):
         # First, detect whitespace / empty glyphs using a simple mask
         raw_mask = font_to_use.getmask(ch, mode="L")
         if not raw_mask.getbbox():
@@ -105,7 +110,7 @@ def main():
             "comment": ch.isprintable() and ch or f"#{ord(ch):02X}",
             "width": gw,
             "height": gh,
-            "bearingX": x0,
+            "bearingX": x0 + horizontal_offset,
             # distance from baseline up to the top of the bitmap (positive)
             "bearingY": -y0 - vertical_offset,
             "advance": adv,
@@ -117,7 +122,8 @@ def main():
             ov = overrides_map[code]
             ch = chr(ov["replacement"])
             g = render_char(
-                ch, font_to_use=ov["font"], vertical_offset=ov["verticalOffset"]
+                ch, font_to_use=ov["font"], vertical_offset=ov["verticalOffset"],
+                horizontal_offset=ov["horizontalOffset"]
             )
             g["comment"] = ov["name"]
         elif code < 32 or code == 127:
@@ -244,7 +250,7 @@ def main():
                 # Extract bitmap slice
                 offset = g["offset"]
                 size = g["width"] * g["height"]
-                glyph_bytes = bitmap_bytes[offset : offset + size]
+                glyph_bytes = bitmap_bytes[offset: offset + size]
 
                 # Create a temporary image for the glyph
                 glyph_img = Image.frombytes("L", (g["width"], g["height"]), glyph_bytes)

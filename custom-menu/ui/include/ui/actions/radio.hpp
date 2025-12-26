@@ -33,11 +33,8 @@ private:
   mutable std::string cached_text = "";
   std::string key = "";
   bool enabled = false;
-  bool checked = false;
   size_t self_index = -1;
   group *radio_group;
-
-  void set_checked(const bool value) { checked = value; }
 
 public:
   radio() = default;
@@ -70,7 +67,7 @@ public:
   radio(const radio &other) = delete;
 
   const std::string &get_text() const override {
-    if (checked)
+    if (is_checked())
       cached_text = GLYPH_RADIO_BUTTON_CHECKED " " + text;
     else
       cached_text = GLYPH_RADIO_BUTTON_UNCHECKED " " + text;
@@ -86,7 +83,7 @@ public:
    *
    * @return True if the radio button is checked, false otherwise.
    */
-  virtual bool is_checked() const { return checked; }
+  bool is_checked() const { return &radio_group->get_selected_radio() == this; }
 
   /**
    * Get the key of the radio button.
@@ -175,7 +172,6 @@ public:
         if (radios[i] == nullptr)
           continue;
         const bool cur_checked = i == selected_index;
-        radios[i]->set_checked(cur_checked);
         if (cur_checked && on_select) {
           on_select(radios[i]->key);
         }

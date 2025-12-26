@@ -67,7 +67,7 @@ overrides:
   - name: TOGGLE_ON
     target: 0x0C
     replacement: 0xE9F6  # Toggle On
-    source: MaterialSymbolsSharp
+    source: MaterialSymbolsSharpFilled
 
   - name: REFRESH
     target: 0x0D

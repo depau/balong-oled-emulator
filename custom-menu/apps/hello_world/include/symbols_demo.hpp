@@ -1,0 +1,79 @@
+#pragma once
+#include "ui/screens/iscreen.hpp"
+#include "ui/ui_session.hpp"
+
+class symbols_demo final : public ui::screens::iscreen {
+  ui::ui_session *session = nullptr;
+
+public:
+  symbols_demo() = default;
+
+  explicit symbols_demo(ui::ui_session &session) : session(&session) {}
+
+  void render(display_controller_api &controller_api) override {
+
+    Clay_BeginLayout();
+    constexpr Clay_Color COLOR_BG = { 20, 20, 40, 255 };
+    constexpr Clay_Color COLOR_HEADER = { 40, 80, 160, 255 };
+    constexpr Clay_Color COLOR_BORDER = { 255, 255, 255, 255 };
+    constexpr Clay_Color COLOR_TEXT = { 240, 240, 240, 255 };
+
+    const auto headerBorder = (Clay_BorderElementConfig) {
+      .color = COLOR_BORDER,
+      .width = { 1, 1, 1, 1, 0 },
+    };
+
+    auto textCfg = (Clay_TextElementConfig) {
+      .textColor = COLOR_TEXT,
+      .fontId = 0,
+      .fontSize = 12,
+      .letterSpacing = 0,
+      .lineHeight = 0,
+      .wrapMode = CLAY_TEXT_WRAP_WORDS,
+      .textAlignment = CLAY_TEXT_ALIGN_LEFT,
+    };
+
+    CLAY(CLAY_ID("Root"), {
+        .layout = {
+            .sizing = { CLAY_SIZING_FIXED(128), CLAY_SIZING_FIXED(128) },
+            .padding = CLAY_PADDING_ALL(4),
+            .childGap = 4,
+            .layoutDirection = CLAY_TOP_TO_BOTTOM,
+        },
+        .backgroundColor = COLOR_BG, // RECTANGLE
+    }) {
+      CLAY(CLAY_ID("Header"), {
+        .layout = {
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(20) },
+            .padding = CLAY_PADDING_ALL(2),
+        },
+        .backgroundColor = COLOR_HEADER, // RECTANGLE
+        .border = headerBorder,          // BORDER
+      }) {
+        const auto title = CLAY_STRING("Symbols demo " GLYPH_CHECKBOX_CHECKED);
+        CLAY_TEXT(title, &textCfg); // TEXT
+      }
+
+      CLAY(CLAY_ID("Symbols demo"), {
+        .layout = {
+            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT() },
+            .padding = CLAY_PADDING_ALL(2),
+        },
+        .backgroundColor = COLOR_HEADER, // RECTANGLE
+        .border = headerBorder
+      }) {
+        // clang-format off
+        const auto body = CLAY_STRING(
+          "pA" GLYPH_ARROW_BACK GLYPH_POWER_BUTTON GLYPH_MENU GLYPH_CARET_DOWN GLYPH_CARET_UP GLYPH_TOGGLE_ON "Dq "
+          "pA"  GLYPH_TOGGLE_OFF GLYPH_CHECKBOX_UNCHECKED GLYPH_CHECKBOX_CHECKED GLYPH_RADIO_BUTTON_UNCHECKED GLYPH_RADIO_BUTTON_CHECKED GLYPH_REFRESH "Dq "
+        );
+        // clang-format on
+        CLAY_TEXT(body, &textCfg); // TEXT
+      }
+    }
+
+    controller_api.clay_render(Clay_EndLayout());
+  }
+
+  void handle_keypress(display_controller_api &controller_api, int button) override { session->pop_screen(); }
+};

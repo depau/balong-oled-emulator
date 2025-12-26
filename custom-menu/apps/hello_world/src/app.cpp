@@ -1,79 +1,30 @@
 #include <iostream>
 
 #include "apps/app_api.hpp"
-#include "clay.hpp"
 #include "symbols.h"
+#include "symbols_demo.hpp"
+#include "ui/actions/button.hpp"
+#include "ui/screens/menu_screen.hpp"
+#include "ui/ui_session.hpp"
+#include "ui/ui_session_app.hpp"
 
-class hello_world_app {
+class hello_world_app : public ui::ui_session_app<hello_world_app> {
+  ui::screens::menu_screen::actions_vector_t menu_actions;
+
 public:
-  void on_enter(const app_api_t controller_api) {
+  hello_world_app() = default;
+  explicit hello_world_app(const app_api_t controller_api) : ui_session_app(controller_api) {}
 
-    Clay_BeginLayout();
-    std::cout << "Rendering menu UI frame\n";
-    constexpr Clay_Color COLOR_BG = { 20, 20, 40, 255 };
-    constexpr Clay_Color COLOR_HEADER = { 40, 80, 160, 255 };
-    constexpr Clay_Color COLOR_CLIPBOX = { 20, 40, 80, 255 };
-    constexpr Clay_Color COLOR_BORDER = { 255, 255, 255, 255 };
-    constexpr Clay_Color COLOR_TEXT = { 240, 240, 240, 255 };
+  void setup(app_api_t controller_api) {
+    menu_actions.emplace_back(std::make_unique<ui::actions::button>(GLYPH_ARROW_BACK " Back", [controller_api] {
+      controller_api->goto_main_menu();
+    }));
+    menu_actions.emplace_back(std::make_unique<ui::actions::button>("Symbols demo", [this] {
+      get_ui_session().push_screen(std::make_unique<symbols_demo>(get_ui_session()));
+    }));
 
-    const auto headerBorder = (Clay_BorderElementConfig) {
-      .color = COLOR_BORDER,
-      .width = { 1, 1, 1, 1, 0 },
-    };
-
-    auto textCfg = (Clay_TextElementConfig) {
-      .textColor = COLOR_TEXT,
-      .fontId = 0,
-      .fontSize = 12,
-      .letterSpacing = 0,
-      .lineHeight = 0,
-      .wrapMode = CLAY_TEXT_WRAP_WORDS,
-      .textAlignment = CLAY_TEXT_ALIGN_LEFT,
-    };
-
-    CLAY(CLAY_ID("Root"), {
-        .layout = {
-            .sizing = { CLAY_SIZING_FIXED(128), CLAY_SIZING_FIXED(128) },
-            .padding = CLAY_PADDING_ALL(4),
-            .childGap = 4,
-            .layoutDirection = CLAY_TOP_TO_BOTTOM,
-        },
-        .backgroundColor = COLOR_BG, // RECTANGLE
-    }) {
-      CLAY(CLAY_ID("Header"), {
-        .layout = {
-            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIXED(20) },
-            .padding = CLAY_PADDING_ALL(2),
-        },
-        .backgroundColor = COLOR_HEADER, // RECTANGLE
-        .border = headerBorder,          // BORDER
-      }) {
-        const auto hello = CLAY_STRING("Hello, world!");
-        CLAY_TEXT(hello, &textCfg); // TEXT
-      }
-
-      CLAY(CLAY_ID("Symbols demo"), {
-        .layout = {
-            .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT() },
-            .padding = CLAY_PADDING_ALL(2),
-        },
-        .backgroundColor = COLOR_HEADER, // RECTANGLE
-        .border = headerBorder
-      }) {
-        // clang-format off
-        const auto body = CLAY_STRING(
-          "pA" GLYPH_ARROW_BACK GLYPH_POWER_BUTTON GLYPH_MENU GLYPH_CARET_DOWN GLYPH_CARET_UP GLYPH_TOGGLE_ON "Dq "
-          "pA"  GLYPH_TOGGLE_OFF GLYPH_CHECKBOX_UNCHECKED GLYPH_CHECKBOX_CHECKED GLYPH_RADIO_BUTTON_UNCHECKED GLYPH_RADIO_BUTTON_CHECKED GLYPH_REFRESH "Dq "
-        );
-        // clang-format on
-        CLAY_TEXT(body, &textCfg); // TEXT
-      }
-    }
-
-    controller_api->clay_render(Clay_EndLayout());
+    get_ui_session().push_screen(std::make_unique<ui::screens::menu_screen>(menu_actions, "Hello World"));
   }
-
-  void on_keypress(const app_api_t controller_api, int /*button*/) { controller_api->goto_main_menu(); }
 };
 
 DECLARE_CPP_APP("Hello World", hello_world_app);

@@ -21,6 +21,8 @@ public:
 
   bool is_selectable() const override { return false; }
 
+  bool is_hoverable() const override { return true; }
+
   bool is_enabled() const override { return true; }
 
   bool is_multiline() const { return multiline; }

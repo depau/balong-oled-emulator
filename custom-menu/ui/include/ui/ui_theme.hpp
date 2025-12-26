@@ -13,6 +13,9 @@ constexpr Clay_Color COLOR_ACTIVE_TEXT = COLOR_TEXT;
 constexpr Clay_Color COLOR_ACTIVE_BACKGROUND = COLOR_BACKGROUND;
 constexpr Clay_Color COLOR_ACTIVE_BORDER = { 255, 255, 255, 255 };
 
+constexpr Clay_Color COLOR_DISABLED_TEXT = { 128, 128, 128, 255 };
+constexpr Clay_Color COLOR_DISABLED_BACKGROUND = { 0, 0, 0, 255 };
+
 constexpr Clay_Color COLOR_DISABLED_ACTIVE_TEXT = { 128, 128, 128, 255 };
 constexpr Clay_Color COLOR_DISABLED_ACTIVE_BACKGROUND = { 0, 0, 0, 255 };
 constexpr Clay_Color COLOR_DISABLED_ACTIVE_BORDER = { 128, 128, 128, 255 };

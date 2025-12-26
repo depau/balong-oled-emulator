@@ -28,6 +28,13 @@ public:
   virtual bool is_selectable() const { return false; }
 
   /**
+   * Return whether the action can be hovered. If false, menus will entirely skip over this action when navigating.
+   *
+   * @return True if the action is hoverable, false otherwise.
+   */
+  virtual bool is_hoverable() const { return is_selectable(); }
+
+  /**
    * Return whether the action is enabled, regardless of whether it is selectable.
    * In other words, an action can be selectable but disabled (e.g., a grayed-out menu item).
    *

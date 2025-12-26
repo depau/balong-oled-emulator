@@ -9,9 +9,11 @@
 #include <vector>
 
 #include "clay.hpp"
-#include "debug.h"
 #include "hooked_functions.h"
 #include "ui/actions/button.hpp"
+#include "ui/actions/iaction.hpp"
+#include "ui/actions/radio.hpp"
+#include "ui/actions/toggle.hpp"
 #include "ui/screens/iscreen.hpp"
 #include "ui/ui_theme.hpp"
 #include "ui/utils.hpp"
@@ -51,8 +53,13 @@ private:
       }) {
         size_t index = 0;
         for (const auto &action : *actions) {
+          Clay_ElementDeclaration element_config;
+          Clay_ElementId element_id;
+          Clay_TextElementConfig *text_config;
+
           if (index == active_entry) {
-            CLAY(CLAY_ID("ActiveMenuEntry"), {
+            element_id = CLAY_ID("ActiveMenuEntry");
+            element_config = {
               .layout = {
                 .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
                 .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
@@ -60,20 +67,23 @@ private:
               .backgroundColor = theme::COLOR_ACTIVE_BACKGROUND,
               .clip = { .horizontal =  true, .vertical = false },
               .border = activeBorderCfg,
-            }) {
-              CLAY_TEXT(to_clay_string(action->get_text()), &activeTextCfg);
-            }
+            };
+            text_config = &activeTextCfg;
           } else {
-            CLAY(CLAY_IDI("MenuEntry", static_cast<uint32_t>(index)), {
+            element_config ={
               .layout = {
                 .sizing = { CLAY_SIZING_GROW(0), CLAY_SIZING_FIT(0) },
                 .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
               },
               .backgroundColor = theme::COLOR_BACKGROUND,
               .clip = { .horizontal =  true, .vertical = false },
-            }) {
-              CLAY_TEXT(to_clay_string(action->get_text()), &textCfg);
-            }
+            };
+            element_id = CLAY_IDI("MenuEntry", static_cast<uint32_t>(index));
+            text_config = &textCfg;
+          }
+
+          CLAY(element_id, element_config) {
+            CLAY_TEXT(to_clay_string(action->get_text()), text_config);
           }
           index++;
         }
@@ -170,14 +180,18 @@ public:
 
   void handle_keypress(display_controller_api &controller_api, int button) override {
     switch (button) {
-    case BUTTON_MENU:
-      if (++active_entry >= actions->size())
-        active_entry = 0;
+    case BUTTON_MENU: {
+      const auto original_entry = active_entry;
+      do {
+        active_entry = (active_entry + 1) % actions->size();
+      } while (!actions->at(active_entry)->is_selectable() && active_entry != original_entry);
       render(controller_api);
       break;
-    case BUTTON_POWER:
+    }
+    case BUTTON_POWER: {
       actions->at(active_entry)->select();
       break;
+    }
     default:
       break;
     }

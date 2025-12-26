@@ -4,6 +4,7 @@
 #include <string>
 
 #include "iaction.hpp"
+#include "symbols.h"
 
 namespace ui::actions {
 
@@ -21,6 +22,7 @@ public:
 
 private:
   std::string text = "Toggle";
+  mutable std::string cached_text = "";
   bool enabled = true;
   bool checked = false;
   display_mode mode = display_mode::CHECKBOX;
@@ -35,7 +37,20 @@ public:
                   const bool enabled = true) :
     text(text), enabled(enabled), checked(checked), mode(mode), on_select(std::move(on_select)) {}
 
-  const std::string &get_text() const override { return text; }
+  const std::string &get_text() const override {
+    if (mode == display_mode::SWITCH) {
+      if (checked)
+        cached_text = GLYPH_TOGGLE_ON " " + text;
+      else
+        cached_text = GLYPH_TOGGLE_OFF " " + text;
+    } else if (mode == display_mode::CHECKBOX) {
+      if (checked)
+        cached_text = GLYPH_CHECKBOX_CHECKED " " + text;
+      else
+        cached_text = GLYPH_CHECKBOX_UNCHECKED " " + text;
+    }
+    return cached_text;
+  }
 
   bool is_selectable() const override { return true; }
 

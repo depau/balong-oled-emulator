@@ -5,6 +5,7 @@
 #include <string>
 
 #include "iaction.hpp"
+#include "symbols.h"
 
 namespace ui::actions {
 
@@ -29,6 +30,7 @@ public:
 
 private:
   std::string text = "Radio button";
+  mutable std::string cached_text = "";
   std::string key = "";
   bool enabled = false;
   bool checked = false;
@@ -67,7 +69,13 @@ public:
   radio &operator=(const radio &other) = delete;
   radio(const radio &other) = delete;
 
-  const std::string &get_text() const override { return text; }
+  const std::string &get_text() const override {
+    if (checked)
+      cached_text = GLYPH_RADIO_BUTTON_CHECKED " " + text;
+    else
+      cached_text = GLYPH_RADIO_BUTTON_UNCHECKED " " + text;
+    return cached_text;
+  }
 
   bool is_selectable() const override { return true; }
 

@@ -18,3 +18,16 @@ struct StringLiteral {
 
   char value[N + 1];
 };
+
+template<typename Parent, typename Child>
+constexpr bool is_a(Child child) {
+  if constexpr (std::is_pointer_v<Child>) {
+    if constexpr (std::is_pointer_v<Parent>)
+      return dynamic_cast<Parent>(child) != nullptr;
+    return dynamic_cast<const Parent *>(child) != nullptr;
+  } else {
+    if constexpr (std::is_pointer_v<Parent>)
+      return dynamic_cast<Parent>(&child) != nullptr;
+    return dynamic_cast<const Parent *>(&child) != nullptr;
+  }
+}

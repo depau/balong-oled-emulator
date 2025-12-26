@@ -32,6 +32,9 @@ public:
       std::make_unique<ui::actions::button>("Button", [] { std::cout << "Selected Option 1" << std::endl; }));
     menu_screen_demo_menu.emplace_back(std::make_unique<ui::actions::label>("Label"));
     menu_screen_demo_menu.emplace_back(std::make_unique<ui::actions::page_break>());
+    menu_screen_demo_menu.emplace_back(
+      std::make_unique<ui::actions::label>("Long label that spans multiple lines", true));
+    menu_screen_demo_menu.emplace_back(std::make_unique<ui::actions::page_break>());
     menu_screen_demo_menu.emplace_back(std::make_unique<ui::actions::toggle>(
       "Checkbox",
       [this](const bool state) {

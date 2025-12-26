@@ -15,7 +15,7 @@ class label final : public iaction {
 
 public:
   label() = default;
-  explicit label(const std::string &text, bool multiline = false) : text(text), multiline(multiline) {}
+  explicit label(const std::string &text, const bool multiline = false) : text(text), multiline(multiline) {}
 
   const std::string &get_text() const override { return text; }
 
@@ -25,7 +25,7 @@ public:
 
   bool is_enabled() const override { return true; }
 
-  bool is_multiline() const { return multiline; }
+  bool is_multiline() const override { return multiline; }
 };
 
 } // namespace ui::actions

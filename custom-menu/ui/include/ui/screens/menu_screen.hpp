@@ -1,8 +1,6 @@
 #pragma once
 
-#include <algorithm>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -85,7 +83,7 @@ private:
                 .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
               },
               .backgroundColor = (action->is_enabled() && action->is_selectable()) ? theme::COLOR_ACTIVE_BACKGROUND : theme::COLOR_DISABLED_ACTIVE_BACKGROUND,
-              .clip = { .horizontal =  true, .vertical = false },
+              .clip = { .horizontal =  !action->is_multiline(), .vertical = false },
               .border = (action->is_enabled() && action->is_selectable()) ? activeBorderCfg : disabledActiveBorderCfg,
             };
             text_config = action->is_enabled() ? &activeTextCfg : &disabledTextCfg;
@@ -96,7 +94,7 @@ private:
                 .padding = CLAY_PADDING_ALL(MENUENTRY_PADDING),
               },
               .backgroundColor = action->is_enabled() ? theme::COLOR_BACKGROUND : theme::COLOR_DISABLED_BACKGROUND,
-              .clip = { .horizontal =  true, .vertical = false },
+              .clip = { .horizontal =  !action->is_multiline(), .vertical = false },
             };
             text_config = action->is_enabled() ? &textCfg : &disabledTextCfg;
           }
@@ -219,16 +217,16 @@ public:
     const float active_entry_y_offset_from_page_break = active_entry_y_offset_from_top - last_page_break_y_offset;
 
     const Clay_ScrollContainerData scroll_info = Clay_GetScrollContainerData(CLAY_ID("ScrollLayout"));
-    const Clay_ElementData active_entry_info = Clay_GetElementData(CLAY_ID("ActiveMenuEntry"));
+    Clay_ElementData active_entry = Clay_GetElementData(CLAY_ID("ActiveMenuEntry"));
     assert(scroll_info.found);
-    assert(active_entry_info.found);
+    assert(active_entry.found);
 
     bool can_scroll_up = false;
-    if (active_entry_y_offset_from_page_break + active_entry_info.boundingBox.height >
+    if (active_entry_y_offset_from_page_break + active_entry.boundingBox.height >
         scroll_info.scrollContainerDimensions.height) {
-      scroll_info.scrollPosition->y = -active_entry_y_offset_from_page_break - last_page_break_y_offset -
-                                      active_entry_info.boundingBox.height +
-                                      scroll_info.scrollContainerDimensions.height;
+      scroll_info.scrollPosition->y = -static_cast<int>(active_entry_y_offset_from_page_break +
+                                                        last_page_break_y_offset + active_entry.boundingBox.height -
+                                                        scroll_info.scrollContainerDimensions.height);
       can_scroll_up = true;
     } else {
       scroll_info.scrollPosition->y = -static_cast<int>(last_page_break_y_offset);
@@ -248,6 +246,9 @@ public:
            disabledActiveBorderCfg,
            can_scroll_up);
     controller_api.clay_render(Clay_EndLayout());
+
+    active_entry = Clay_GetElementData(CLAY_ID("ActiveMenuEntry"));
+    assert(active_entry.found);
   }
 
   void handle_keypress(display_controller_api &controller_api, int button) override {

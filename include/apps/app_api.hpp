@@ -10,6 +10,7 @@
 
 #include "app_api.h"
 #include "sdk19compat.hpp"
+#include "template_utils.hpp"
 
 namespace priv_api {
 
@@ -273,15 +274,6 @@ consteval app_on_keypress_fn_t get_on_keypress_ptr() {
  */
 #define DECLARE_CPP_APP(_name, _class) _DECLARE_CPP_APP_INTERNAL(REGISTER_APP_FN, APP_DESCRIPTOR, _name, _class)
 
-template<size_t N>
-struct StringLiteral {
-  constexpr StringLiteral(const char (&str)[N]) {
-    std::copy_n(str, N, value);
-    value[N] = '\0';
-  }
-
-  char value[N + 1];
-};
 
 /**
  * Base class for binding apps
@@ -315,11 +307,26 @@ private:
 public:
   binding_app() = default;
 
+  /**
+   * Constructor that registers the app loader with the controller API
+   *
+   * @param controller_api The controller API object
+   */
   explicit binding_app(app_api_t controller_api) {
     controller_api->register_app_loader(file_ext, &load_app_wrapper, this);
   }
 
 protected:
+  /**
+   * Build an app descriptor with custom callbacks. You only need to use this if you need to override the default
+   * callbacks provided by the adapter.
+   *
+   * @param app_name The name of the app
+   * @param on_enter The on_enter callback
+   * @param on_leave The on_leave callback
+   * @param on_keypress The on_keypress callback
+   * @return A pointer to the built app descriptor
+   */
   app_descriptor *build_descriptor(const char *app_name,
                                    const app_on_enter_fn_t on_enter,
                                    const app_on_leave_fn_t on_leave,
@@ -334,6 +341,12 @@ protected:
     return &descriptors.back();
   }
 
+  /**
+   * Build an app descriptor with default callbacks for the adapter specified by the template parameter
+   *
+   * @param app_name The name of the app
+   * @return A pointer to the built app descriptor
+   */
   app_descriptor *build_descriptor(const char *app_name) {
     return build_descriptor(app_name,
                             get_on_enter_ptr<Adapter>(),

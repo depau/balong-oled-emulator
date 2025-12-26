@@ -21,15 +21,15 @@ void main_menu_app::load_app_actions(display_controller &controller) {
 
   int index = 0;
   for (const auto &kv : controller.get_apps()) {
+    const auto cur_index = index++;
     const auto &[descriptor, _] = kv;
-    if (index == 0) {
-      ++index;
+    if (cur_index == 0)
       continue; // skip main menu itself
-    }
-    actions.emplace_back(std::make_unique<ui::actions::button>(descriptor.name, [&controller, index] {
-      controller.set_active_app(index);
+    if (descriptor.on_enter == nullptr)
+      continue; // skip apps without GUI
+    actions.emplace_back(std::make_unique<ui::actions::button>(descriptor.name, [&controller, cur_index] {
+      controller.set_active_app(cur_index);
     }));
-    ++index;
   }
   debugf("registered %zu main menu actions\n", actions.size());
 }

@@ -274,7 +274,6 @@ consteval app_on_keypress_fn_t get_on_keypress_ptr() {
  */
 #define DECLARE_CPP_APP(_name, _class) _DECLARE_CPP_APP_INTERNAL(REGISTER_APP_FN, APP_DESCRIPTOR, _name, _class)
 
-
 /**
  * Base class for binding apps
  *
@@ -295,7 +294,8 @@ private:
     if (userptr == nullptr)
       return;
     auto *adapter = static_cast<Adapter *>(userptr);
-    adapter->teardown();
+    if constexpr (HasOnTeardown<adapter_t>)
+      adapter->teardown(controller_api);
     delete adapter;
   }
 

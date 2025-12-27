@@ -121,7 +121,8 @@ private:
       }
 
       if (controller_api.get_screen_height() > 64) {
-        ui_add_footer(&titleTextCfg, true, true);
+        const actions::iaction &active_action = *(*actions)[active_entry];
+        ui_add_footer(&titleTextCfg, true, active_action.is_selectable() && active_action.is_enabled());
       }
     }
   }

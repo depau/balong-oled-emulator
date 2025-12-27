@@ -92,7 +92,7 @@ struct IntRect {
   int h;
 };
 
-inline IntRect bbox_to_int(const Clay_BoundingBox &bb) {
+constexpr IntRect bbox_to_int(const Clay_BoundingBox &bb) {
   const int x0 = static_cast<int>(bb.x + 0.5f);
   const int y0 = static_cast<int>(bb.y + 0.5f);
   const int w = static_cast<int>(bb.width + 0.5f);
@@ -100,7 +100,7 @@ inline IntRect bbox_to_int(const Clay_BoundingBox &bb) {
   return { x0, y0, w, h };
 }
 
-inline bool intersect(const IntRect &a, const IntRect &b, IntRect &out) {
+constexpr bool intersect(const IntRect &a, const IntRect &b, IntRect &out) {
   const int x0 = std::max(a.x, b.x);
   const int y0 = std::max(a.y, b.y);
   const int x1 = std::min(a.x + a.w, b.x + b.w);
@@ -115,14 +115,14 @@ inline bool intersect(const IntRect &a, const IntRect &b, IntRect &out) {
 // Color helpers (Clay_Color -> BGR565)
 // ------------------------------------------------------------
 
-inline std::uint8_t clamp_channel(float c) {
+constexpr std::uint8_t clamp_channel(const float c) {
   int v = static_cast<int>(c + 0.5f);
   v = std::clamp(v, 0, 255);
   return static_cast<std::uint8_t>(v);
 }
 
 // BGR565: 5 bits B, 6 bits G, 5 bits R
-inline std::uint16_t pack_bgr565(const Clay_Color &color) {
+constexpr std::uint16_t pack_bgr565(const Clay_Color &color) {
   const std::uint8_t r = clamp_channel(color.r);
   const std::uint8_t g = clamp_channel(color.g);
   const std::uint8_t b = clamp_channel(color.b);
@@ -159,6 +159,19 @@ public:
       return nullptr;
     }
     return fonts[fontId];
+  }
+
+  static constexpr uint8_t div255_round(const uint16_t x) {
+    // x is in [0, 255*255]
+    // Exact rounding division by 255:
+    // (x + 128 + ((x + 128) >> 8)) >> 8
+    const auto v = static_cast<uint16_t>(x + 128);
+    return static_cast<uint8_t>((v + (v >> 8)) >> 8);
+  }
+
+  static constexpr uint8_t alphaBlend(const uint8_t src, const uint8_t dst, const uint8_t a) {
+    const uint16_t x = static_cast<uint16_t>(src) * a + static_cast<uint16_t>(dst) * (255 - a);
+    return div255_round(x);
   }
 
   void clearBgr565(const std::uint16_t colorBgr565) {
@@ -298,6 +311,12 @@ protected:
       if (!intersect(tmp, *clip, tmp))
         return;
     }
+
+    Clay_Color bg_premultiplied{ idata.backgroundColor.r * div255_round(idata.backgroundColor.a),
+                                 idata.backgroundColor.g * div255_round(idata.backgroundColor.a),
+                                 idata.backgroundColor.b * div255_round(idata.backgroundColor.a),
+                                 idata.backgroundColor.a };
+
     for (int y = tmp.y; y < tmp.y + tmp.h; ++y) {
       for (int x = tmp.x; x < tmp.x + tmp.w; ++x) {
         const int imgX = x - bb.x;
@@ -307,12 +326,22 @@ protected:
         const std::size_t pixelIndex = static_cast<std::size_t>(imgY) * static_cast<std::size_t>(img->width) +
                                        static_cast<std::size_t>(imgX);
         const std::size_t byteOffset = pixelIndex * 4;
-        const std::uint8_t r = img->data[byteOffset + 0];
-        const std::uint8_t g = img->data[byteOffset + 1];
-        const std::uint8_t b = img->data[byteOffset + 2];
-        const std::uint8_t a = img->data[byteOffset + 3];
+        std::uint8_t r = img->data[byteOffset + 0];
+        std::uint8_t g = img->data[byteOffset + 1];
+        std::uint8_t b = img->data[byteOffset + 2];
+        std::uint8_t a = img->data[byteOffset + 3];
+
         if (a == 0)
           continue;
+
+        if (bg_premultiplied.a > 0 && a < 255) {
+          // Blend with background color
+          r = alphaBlend(r, static_cast<uint8_t>(bg_premultiplied.r), 255 - a);
+          g = alphaBlend(g, static_cast<uint8_t>(bg_premultiplied.g), 255 - a);
+          b = alphaBlend(b, static_cast<uint8_t>(bg_premultiplied.b), 255 - a);
+          a = a + div255_round(static_cast<uint16_t>(bg_premultiplied.a) * (255 - a));
+        }
+
         const Clay_Color color{
           static_cast<float>(r), static_cast<float>(g), static_cast<float>(b), static_cast<float>(a)
         };
@@ -490,10 +519,10 @@ public:
     const std::uint8_t b_g = (b_g_6 << 2) | (b_g_6 >> 4);
     const std::uint8_t b_b = (b_b_5 << 3) | (b_b_5 >> 2);
 
-    // Blend channels (alpha is 0-255)
-    const std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
-    const std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
-    const std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
+    // Blend channels
+    const std::uint8_t out_r = alphaBlend(f_r, b_r, alpha);
+    const std::uint8_t out_g = alphaBlend(f_g, b_g, alpha);
+    const std::uint8_t out_b = alphaBlend(f_b, b_b, alpha);
 
     // Pack back to BGR565
     const std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);
@@ -587,9 +616,9 @@ public:
     const std::uint8_t b_b = bgIsOn ? 255 : 0;
 
     // Blend channels
-    const std::uint8_t out_r = static_cast<std::uint8_t>(((f_r * alpha) + (b_r * (255 - alpha))) / 255);
-    const std::uint8_t out_g = static_cast<std::uint8_t>(((f_g * alpha) + (b_g * (255 - alpha))) / 255);
-    const std::uint8_t out_b = static_cast<std::uint8_t>(((f_b * alpha) + (b_b * (255 - alpha))) / 255);
+    const std::uint8_t out_r = alphaBlend(f_r, b_r, alpha);
+    const std::uint8_t out_g = alphaBlend(f_g, b_g, alpha);
+    const std::uint8_t out_b = alphaBlend(f_b, b_b, alpha);
 
     // Pack back to BGR565 for luminance calculation
     const std::uint16_t outColor = ((out_r >> 3) << 11) | ((out_g >> 2) << 5) | (out_b >> 3);

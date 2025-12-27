@@ -16,8 +16,20 @@ public:
    * The display mode of the toggle.
    */
   enum class display_mode {
+    /**
+     * Display the toggle as a checkbox.
+     */
     CHECKBOX,
+
+    /**
+     * Display the toggle as a switch.
+     */
     SWITCH,
+
+    /**
+     * Display the toggle as a radio button (this is purely cosmetic and does not enforce radio button behavior).
+     */
+    RADIO_BUTTON,
   };
 
 private:
@@ -48,6 +60,13 @@ public:
         cached_text = GLYPH_CHECKBOX_CHECKED " " + text;
       else
         cached_text = GLYPH_CHECKBOX_UNCHECKED " " + text;
+    } else if (mode == display_mode::RADIO_BUTTON) {
+      if (checked)
+        cached_text = GLYPH_RADIO_BUTTON_CHECKED " " + text;
+      else
+        cached_text = GLYPH_RADIO_BUTTON_UNCHECKED " " + text;
+    } else {
+      cached_text = text;
     }
     return cached_text;
   }

@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -7,6 +8,7 @@
 
 #include "clay.hpp"
 #include "debug.h"
+#include "image_descriptor.h"
 
 #ifdef DEBUG_RENDER_COMMANDS
 #define render_debugf(...) debugf(__VA_ARGS__)
@@ -282,6 +284,44 @@ protected:
     }
   }
 
+  void drawImageInternal(const IntRect &bb, const IntRect *clip, const Clay_ImageRenderData &idata) {
+    const auto *img = static_cast<const image_descriptor_t *>(idata.imageData);
+    if (!img)
+      return;
+    assert(img->image_format == IMAGE_FORMAT_RAW);
+    assert(img->pixel_format == PIXEL_FORMAT_RGBA8888);
+    const IntRect bounds{ 0, 0, Derived::kWidth, Derived::kHeight };
+    IntRect tmp;
+    if (!intersect(bounds, bb, tmp))
+      return;
+    if (clip) {
+      if (!intersect(tmp, *clip, tmp))
+        return;
+    }
+    for (int y = tmp.y; y < tmp.y + tmp.h; ++y) {
+      for (int x = tmp.x; x < tmp.x + tmp.w; ++x) {
+        const int imgX = x - bb.x;
+        const int imgY = y - bb.y;
+        if (imgX < 0 || imgX >= img->width || imgY < 0 || imgY >= img->height)
+          continue;
+        const std::size_t pixelIndex = static_cast<std::size_t>(imgY) * static_cast<std::size_t>(img->width) +
+                                       static_cast<std::size_t>(imgX);
+        const std::size_t byteOffset = pixelIndex * 4;
+        const std::uint8_t r = img->data[byteOffset + 0];
+        const std::uint8_t g = img->data[byteOffset + 1];
+        const std::uint8_t b = img->data[byteOffset + 2];
+        const std::uint8_t a = img->data[byteOffset + 3];
+        if (a == 0)
+          continue;
+        const Clay_Color color{
+          static_cast<float>(r), static_cast<float>(g), static_cast<float>(b), static_cast<float>(a)
+        };
+        const std::uint16_t colorBgr565 = pack_bgr565(color);
+        self().putPixel(x, y, colorBgr565, a);
+      }
+    }
+  }
+
 public:
   void render(const Clay_RenderCommandArray &cmdArray) {
     std::vector<IntRect> scissorStack;
@@ -362,7 +402,7 @@ public:
 
       case CLAY_RENDER_COMMAND_TYPE_IMAGE:
         render_debugf("render command: %*s image\n", static_cast<int>(scissorStack.size()) * 2, "");
-        // Not used in this example; can be implemented similarly
+        drawImageInternal(bb, currentClip(), cmd.renderData.image);
         break;
 
       case CLAY_RENDER_COMMAND_TYPE_SCISSOR_START: {

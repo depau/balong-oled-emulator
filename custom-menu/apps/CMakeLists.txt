@@ -22,6 +22,7 @@ function(custom_menu_add_app option order target)
             "${CMAKE_CURRENT_SOURCE_DIR}/${target}/include"
             "${CMAKE_CURRENT_SOURCE_DIR}/../ui/vendor"
             "${CMAKE_CURRENT_SOURCE_DIR}/../ui/include"
+            "${ASSETS_INCLUDE_DIR}"
             "${SYMBOLS_INCLUDE_DIR}"
     )
 
@@ -35,6 +36,7 @@ function(custom_menu_add_app option order target)
 
     add_dependencies(
             ${target}
+            generate_asset_headers
             generate_font_headers
     )
 

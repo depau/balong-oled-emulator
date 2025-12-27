@@ -11,19 +11,18 @@ option(STRIP "Strip symbols from the final binaries to reduce size" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "/app/hijack")
-endif()
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "/app/hijack")
+endif ()
 
 set(COMMON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
-set(FONTS_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_fonts")
-set(SYMBOLS_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_symbols")
-file(MAKE_DIRECTORY "${FONTS_INCLUDE_DIR}/fonts")
-file(MAKE_DIRECTORY "${SYMBOLS_INCLUDE_DIR}")
-
-
 function(apply_common_settings target)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(${target} PRIVATE
+                -Wno-braced-scalar-init
+        )
+    endif ()
     if (ENABLE_SANITIZERS)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
             target_compile_options(${target} PRIVATE -fsanitize=address,undefined,leak,integer -fno-omit-frame-pointer)
@@ -78,5 +77,4 @@ if (EMULATOR)
     endif ()
 endif ()
 
-add_subdirectory(fonts)
 add_subdirectory(custom-menu)

@@ -4,18 +4,19 @@
 #include "symbols.h"
 #include "ui/ui_theme.hpp"
 
+#define ROOT_ELEMENT_SIZING(_ctrl)                                      \
+  { CLAY_SIZING_FIXED(static_cast<float>((_ctrl)->get_screen_width())), \
+    CLAY_SIZING_FIXED(static_cast<float>((_ctrl)->get_screen_height())) }
+
 #define ROOT_ELEMENT(_ctrl, _dir) \
-  CLAY(CLAY_ID("Root"), {                                                     \
-      .layout = {                                                             \
-        .sizing = {                                                           \
-          CLAY_SIZING_FIXED(static_cast<float>((_ctrl)->get_screen_width())), \
-          CLAY_SIZING_FIXED(static_cast<float>((_ctrl)->get_screen_height())) \
-        },                                                                    \
-        .padding = CLAY_PADDING_ALL(ROOT_PADDING),                            \
-        .childGap = ROOT_PADDING,                                             \
-        .layoutDirection = _dir,                                              \
-    },                                                                        \
-    .backgroundColor = ui::theme::COLOR_SURFACE,                              \
+  CLAY(CLAY_ID("Root"), {                          \
+      .layout = {                                  \
+        .sizing = ROOT_ELEMENT_SIZING(_ctrl),      \
+        .padding = CLAY_PADDING_ALL(ROOT_PADDING), \
+        .childGap = ROOT_PADDING,                  \
+        .layoutDirection = _dir,                   \
+    },                                             \
+    .backgroundColor = ui::theme::COLOR_SURFACE,   \
   })
 
 #define BOUNDING_BOX \

@@ -79,10 +79,10 @@ ui::rotate_image(const image_descriptor_t &src, const int angle_deg, const rotat
     const double cos_angle = std::cos(radians);
     const double sin_angle = std::sin(radians);
 
-    const double src_cx = static_cast<double>(src.width) / 2.0;
-    const double src_cy = static_cast<double>(src.height) / 2.0;
-    const double dst_cx = static_cast<double>(dest_width) / 2.0;
-    const double dst_cy = static_cast<double>(dest_height) / 2.0;
+    const double src_cx = (static_cast<double>(src.width) - 1.0) / 2.0;
+    const double src_cy = (static_cast<double>(src.height) - 1.0) / 2.0;
+    const double dst_cx = (static_cast<double>(dest_width) - 1.0) / 2.0;
+    const double dst_cy = (static_cast<double>(dest_height) - 1.0) / 2.0;
 
     for (int y = 0; y < dest_height; ++y) {
       for (int x = 0; x < dest_width; ++x) {

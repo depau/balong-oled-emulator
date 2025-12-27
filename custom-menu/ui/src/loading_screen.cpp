@@ -14,7 +14,7 @@ static void ensure_frames_loaded() {
     return;
   constexpr int angle_step = 360 / loading_screen::FRAMES;
   for (int i = 0; i < loading_screen::FRAMES; ++i) {
-    cached_frames[i] = ui::rotate_image(loading_spinner_image, i * angle_step);
+    cached_frames[i] = ui::rotate_image(loading_spinner_image, i * angle_step, ui::rotation_boundary_mode::KEEP_SIZE);
   }
 }
 

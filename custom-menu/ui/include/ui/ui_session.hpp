@@ -10,6 +10,40 @@ namespace ui {
 class ui_session {
   display_controller_api *controller_api;
   std::vector<std::unique_ptr<screens::iscreen>> screen_stack;
+  uint32_t tick_timer_id = 0;
+  int fps = 0;
+
+  void tick(std::chrono::steady_clock::time_point now) const {
+    assert(controller_api != nullptr && "Controller API is null");
+    if (!screen_stack.empty()) {
+      screen_stack.back()->tick(*controller_api, now);
+    }
+  }
+
+  void ensure_tick_timer() {
+    assert(controller_api != nullptr && "Controller API is null");
+    const int new_fps = needs_ticks_per_second();
+
+    // No change in fps, timer state is correct -> do nothing
+    if (new_fps == fps && ((new_fps > 0 && tick_timer_id != 0) || (new_fps == 0 && tick_timer_id == 0)))
+      return;
+
+    // FPS changed, and we have a timer -> cancel it
+    if (new_fps != fps && tick_timer_id != 0) {
+      controller_api->cancel_timer(tick_timer_id);
+      tick_timer_id = 0;
+    }
+    assert(tick_timer_id == 0);
+
+    fps = new_fps;
+    if (fps == 0)
+      return;
+
+    tick_timer_id = controller_api->schedule_timer(1000 / fps, true, [this] {
+      tick(std::chrono::steady_clock::now());
+      ensure_tick_timer();
+    });
+  }
 
 public:
   ui_session() : controller_api(nullptr) {}
@@ -24,15 +58,35 @@ public:
   ui_session(ui_session &&) = default;
 
   /**
+   * Must be called when entering the UI session.
+   */
+  void on_enter() {
+    render();
+    ensure_tick_timer();
+  }
+
+  /**
+   * Must be called when leaving the UI session.
+   */
+  void on_leave() {
+    assert(controller_api != nullptr && "Controller API is null");
+    if (tick_timer_id != 0) {
+      controller_api->cancel_timer(tick_timer_id);
+      tick_timer_id = 0;
+    }
+  }
+
+  /**
    * Handle a keypress event by forwarding it to the top screen in the stack.
    *
    * @param button The button that was pressed
    */
-  void handle_keypress(int button) const {
+  void handle_keypress(const int button) {
     assert(controller_api != nullptr && "Controller API is null");
     if (!screen_stack.empty()) {
       screen_stack.back()->handle_keypress(*controller_api, button);
     }
+    ensure_tick_timer();
   }
 
   /**
@@ -126,18 +180,6 @@ public:
       return screen_stack.back()->needs_ticks_per_second();
     }
     return 0;
-  }
-
-  /**
-   * Call the tick function of the top screen in the stack.
-   *
-   * @param now The current time point, as a monotonic steady clock time point
-   */
-  void tick(std::chrono::steady_clock::time_point now) const {
-    assert(controller_api != nullptr && "Controller API is null");
-    if (!screen_stack.empty()) {
-      screen_stack.back()->tick(*controller_api, now);
-    }
   }
 };
 } // namespace ui

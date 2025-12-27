@@ -19,5 +19,7 @@ public:
 
   void on_enter(app_api_t);
 
-  void on_keypress(app_api_t, const int button) const;
+  void on_leave(app_api_t);
+
+  void on_keypress(app_api_t, int button);
 };

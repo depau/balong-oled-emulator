@@ -39,9 +39,13 @@ void main_menu_app::on_enter(const app_api_t controller_api) {
   auto &controller = static_cast<display_controller &>(*controller_api);
 
   load_app_actions(controller);
-  session.render();
+  session.on_enter();
 }
 
-void main_menu_app::on_keypress(app_api_t, const int button) const {
+void main_menu_app::on_leave(const app_api_t) {
+  session.on_leave();
+}
+
+void main_menu_app::on_keypress(app_api_t, const int button) {
   session.handle_keypress(button);
 }

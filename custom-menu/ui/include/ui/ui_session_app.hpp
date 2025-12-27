@@ -13,7 +13,7 @@ concept HasSetup = requires(T &t, app_api_t controller_api) {
 template<typename Child>
 class ui_session_app {
   bool initialized = false;
-  ui::ui_session session;
+  ui_session session;
 
 public:
   ui_session_app() = default;
@@ -26,12 +26,14 @@ public:
         static_cast<Child *>(this)->setup(controller_api);
       }
     }
-    session.render();
+    session.on_enter();
   }
 
-  void on_keypress(const app_api_t, const int button) const { session.handle_keypress(button); }
+  void on_leave(const app_api_t) { session.on_leave(); }
+
+  void on_keypress(const app_api_t, const int button) { session.handle_keypress(button); }
 
 protected:
-  ui::ui_session &get_ui_session() { return session; }
+  ui_session &get_ui_session() { return session; }
 };
 } // namespace ui

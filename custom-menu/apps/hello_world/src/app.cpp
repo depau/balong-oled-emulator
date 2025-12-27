@@ -8,6 +8,7 @@
 #include "ui/actions/page_break.hpp"
 #include "ui/actions/radio.hpp"
 #include "ui/actions/toggle.hpp"
+#include "ui/screens/loading_screen.hpp"
 #include "ui/screens/menu_screen.hpp"
 #include "ui/ui_session.hpp"
 #include "ui/ui_session_app.hpp"
@@ -70,6 +71,12 @@ public:
     main_menu.emplace_back(std::make_unique<ui::actions::button>("Menu screen demo", [this] {
       get_ui_session().push_screen(
         std::make_unique<ui::screens::menu_screen>(menu_screen_demo_menu, "Menu Screen Demo"));
+    }));
+    main_menu.emplace_back(std::make_unique<ui::actions::button>("Loading screen demo", [this] {
+      get_ui_session().push_screen(std::make_unique<ui::screens::loading_screen>([this](const int button) {
+        std::cout << "Loading screen keypress: " << button << std::endl;
+        get_ui_session().pop_screen();
+      }));
     }));
     main_menu.emplace_back(std::make_unique<ui::actions::button>("Symbols demo", [this] {
       get_ui_session().push_screen(std::make_unique<symbols_demo>(get_ui_session()));

@@ -23,6 +23,15 @@ function(apply_common_settings target)
                 -Wno-braced-scalar-init
         )
     endif ()
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(${target} PRIVATE
+                -O3
+                -flto
+        )
+        target_link_options(${target} PRIVATE
+                -flto
+        )
+    endif ()
     if (ENABLE_SANITIZERS)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
             target_compile_options(${target} PRIVATE -fsanitize=address,undefined,leak,integer -fno-omit-frame-pointer)

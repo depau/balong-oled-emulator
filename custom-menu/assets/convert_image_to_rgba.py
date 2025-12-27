@@ -26,13 +26,11 @@ def image_to_c_header(image_path, header_path, variable_name):
 
         content += f"inline const uint8_t {variable_name}_data[] = {{    "
         for i, byte in enumerate(raw_data):
-            content += "0x{:02x}, ".format(byte)  # noqa: W605
-            if (i + 1) % 16 == 0:
-                content += "\n    "
+            content += "0x{:02x}, ".format(byte)
         content += "\n};\n\n"
 
         content += f"inline const image_descriptor_t {variable_name} = {{ \n"
-        content += f"    .data_size = sizeof({variable_name}_data),\n"
+        content += f"    .data_size = {len(raw_data)},\n"
         content += f"    .width = {width},\n"
         content += f"    .height = {height},\n"
         content += f"    .image_format = IMAGE_FORMAT_RAW,\n"

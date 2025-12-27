@@ -93,7 +93,9 @@ struct display_controller_api {
    * @param message The error message to display
    * @param unload_app Whether to unload the app after reporting the error
    */
-  void fatal_error(const char *message, const bool unload_app) { app_api_fatal_error(this, message, unload_app); }
+  void fatal_error(const char *message, const bool unload_app = false) {
+    app_api_fatal_error(this, message, unload_app);
+  }
 
   /**
    * Register an app loader for a specific file extension

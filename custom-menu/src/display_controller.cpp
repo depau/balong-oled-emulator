@@ -218,13 +218,29 @@ void display_controller::set_active(const bool active) {
 
   if (!active) {
     set_active_app(std::nullopt);
+
+    if (heartbeat_timer_helper.has_value()) {
+      timer_delete_ex(heartbeat_timer_helper->get_timer_id());
+      heartbeat_timer_helper.reset();
+      std::scoped_lock lock(timer_mutex);
+      active_timers.clear();
+    }
   } else {
     set_active_app(0);
+
+    std::scoped_lock lock(timer_mutex);
+    heartbeat_timer_helper.emplace([this] { on_heartbeat_timer(); }, 0, true, 0);
+
+    const uint32_t heartbeat_timer_id = timer_create_ex(FRAME_INTERVAL_MS,
+                                                        true,
+                                                        timer_helper::get_trampoline(),
+                                                        heartbeat_timer_helper->get_userptr());
+    heartbeat_timer_helper->set_timer_id(heartbeat_timer_id);
   }
   is_active = active;
 
   schedule_timer(
-    [this]() {
+    [this] {
       if (is_active && active_app_index.has_value()) {
         auto &[descriptor, userptr] = apps[active_app_index.value()];
         if (descriptor.on_enter) {
@@ -278,63 +294,49 @@ void display_controller::fatal_error(const char *message, const bool unload_app)
   }
 }
 
-void display_controller::gc_stdfn_timer(const uint32_t stdfn_timer_id) {
-  std::scoped_lock lock(stdfn_timer_mutex);
-  if (const auto it = scheduled_stdfn_timers.find(stdfn_timer_id); it != scheduled_stdfn_timers.end()) {
-    const auto &helper = it->second;
-    const uint32_t timer_id = helper.get_timer_id();
-    const bool repeat = helper.is_repeat();
-    timer_debugf("std::function timer fired: stdfn_timer_id=%u, timer_id=%u, repeat=%d\n",
-                 stdfn_timer_id,
-                 timer_id,
-                 repeat);
-    if (!repeat) {
-      scheduled_stdfn_timers.erase(it);
-      scheduled_stdfn_timer_ids.erase(timer_id);
-    }
-  } else {
-    if (const auto it2 = scheduled_stdfn_timer_ids.find(stdfn_timer_id); it2 != scheduled_stdfn_timer_ids.end()) {
-      std::cerr << "stdfn_timer_callback: Inconsistent state detected for stdfn_timer_id=" << stdfn_timer_id << "\n";
-      cancel_timer(it2->second);
-      scheduled_stdfn_timer_ids.erase(it2->second);
-    } else {
-      std::cerr << "stdfn_timer_callback: Unknown stdfn_timer_id=" << stdfn_timer_id << "\n";
-    }
-  }
+void display_controller::on_heartbeat_timer() {
+  std::scoped_lock lock(timer_mutex);
+  const auto now = std::chrono::steady_clock::now();
 
-  if (!deferred_timer_cancellations.empty()) {
-    while (!deferred_timer_cancellations.empty()) {
-      const uint32_t timer_id = deferred_timer_cancellations.front();
-      deferred_timer_cancellations.pop();
-      timer_debugf("processing deferred timer cancellation: timer_id=%u\n", timer_id);
-      cancel_timer(timer_id);
+  for (auto it = active_timers.begin(); it != active_timers.end();) {
+    if (it->is_marked_for_deletion()) {
+      it = active_timers.erase(it);
+      continue;
+    }
+
+    if (now >= it->get_expiration()) {
+      try {
+        (*it)();
+      } catch (...) {
+        std::cerr << "Exception in timer callback\n";
+      }
+
+      // Check if it was marked for deletion during callback
+      if (it->is_marked_for_deletion()) {
+        it = active_timers.erase(it);
+        continue;
+      }
+
+      if (it->is_repeat()) {
+        it->set_expiration(now + std::chrono::milliseconds(it->get_interval_ms()));
+        ++it;
+      } else {
+        it = active_timers.erase(it);
+      }
+    } else {
+      ++it;
     }
   }
 }
 
 uint32_t display_controller::schedule_timer(std::function<void()> &&callback, uint32_t interval_ms, bool repeat) {
-  std::scoped_lock lock(stdfn_timer_mutex);
+  std::scoped_lock lock(timer_mutex);
 
-  uint32_t stdfn_timer_id = next_stdfn_timer_id++;
+  uint32_t id = next_timer_id++;
+  active_timers.emplace_back(std::move(callback), id, repeat, interval_ms);
 
-  assert(!scheduled_stdfn_timers.contains(stdfn_timer_id) && "stdfn_timer_id collision detected");
-  auto it = scheduled_stdfn_timers.emplace(stdfn_timer_id,
-                                           stdfn_timer_helper{ std::move(callback), this, stdfn_timer_id, repeat });
-  auto &helper = it.first->second;
-
-  uint32_t timer_id = timer_create_ex(interval_ms,
-                                      repeat,
-                                      stdfn_timer_helper<display_controller>::get_trampoline(),
-                                      helper.get_userptr());
-  helper.set_timer_id(timer_id);
-
-  timer_debugf("scheduled std::function timer: stdfn_timer_id=%u, timer_id=%u, interval_ms=%u, repeat=%d\n",
-               stdfn_timer_id,
-               timer_id,
-               interval_ms,
-               repeat);
-  scheduled_stdfn_timer_ids.emplace(timer_id, stdfn_timer_id);
-  return timer_id;
+  timer_debugf("scheduled internal timer: id=%u, interval_ms=%u, repeat=%d\n", id, interval_ms, repeat);
+  return id;
 }
 
 uint32_t display_controller::schedule_timer(void (*callback)(void *userptr),
@@ -346,24 +348,15 @@ uint32_t display_controller::schedule_timer(void (*callback)(void *userptr),
 }
 
 uint32_t display_controller::cancel_timer(const uint32_t timer_id) {
-  const std::optional<uint32_t> running_timer_id = get_running_timer_id();
-  if (running_timer_id.has_value() && *running_timer_id == timer_id) {
-    std::cerr << "Warning: Attempted to cancel currently running timer_id=" << timer_id << ", deferring\n";
-    deferred_timer_cancellations.push(timer_id);
-    return 0;
+  std::scoped_lock lock(timer_mutex);
+
+  for (auto &timer : active_timers) {
+    if (timer.get_timer_id() == timer_id) {
+      timer.mark_for_deletion();
+      timer_debugf("canceled internal timer: id=%u\n", timer_id);
+      return 0;
+    }
   }
 
-  const uint32_t res = timer_delete_ex(timer_id);
-
-  std::scoped_lock lock(stdfn_timer_mutex);
-  if (const auto it = scheduled_stdfn_timer_ids.find(timer_id); it != scheduled_stdfn_timer_ids.end()) {
-    const uint32_t stdfn_timer_id = it->second;
-    scheduled_stdfn_timers.erase(stdfn_timer_id);
-    scheduled_stdfn_timer_ids.erase(it);
-    debugf("canceled stdfn timer: stdfn_timer_id=%u, timer_id=%u\n", stdfn_timer_id, timer_id);
-  } else {
-    debugf("canceled C function timer: timer_id=%u\n", timer_id);
-  }
-
-  return res;
+  return 1;
 }

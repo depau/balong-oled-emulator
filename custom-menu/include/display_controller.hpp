@@ -1,6 +1,8 @@
 #pragma once
+#include <chrono>
 #include <functional>
 #include <iostream>
+#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -15,13 +17,12 @@
 #include "fonts/poppins_12.hpp"
 #include "fonts/poppins_8.hpp"
 #include "hooked_functions.h"
-#include "stdfn_timer_helper.hpp"
+#include "timer_helper.hpp"
 
 DECLARE_FN_TYPE(app_register_fn_t, app_descriptor_t *, app_api_t controller_api, void **userptr);
 
 class display_controller : display_controller_api {
   friend class main_menu_app;
-  friend class stdfn_timer_helper<display_controller>;
 
   using app_loader_desc_t = std::pair<app_loader_callback_fn_t, void *>;
 
@@ -58,11 +59,13 @@ class display_controller : display_controller_api {
 
   std::optional<std::string> app_error_message = std::nullopt;
 
-  std::recursive_mutex stdfn_timer_mutex;
-  std::map<uint32_t, stdfn_timer_helper<display_controller>> scheduled_stdfn_timers{};
-  std::map<uint32_t, uint32_t> scheduled_stdfn_timer_ids{};
-  uint32_t next_stdfn_timer_id = 1;
-  std::queue<uint32_t> deferred_timer_cancellations{};
+  static constexpr uint32_t FRAME_FPS = 30;
+  static constexpr uint32_t FRAME_INTERVAL_MS = 1000 / FRAME_FPS;
+
+  std::recursive_mutex timer_mutex;
+  std::list<timer_helper> active_timers{};
+  uint32_t next_timer_id = 1;
+  std::optional<timer_helper> heartbeat_timer_helper;
 
   bool is_small_screen_mode = false;
   bool is_active = false;
@@ -74,7 +77,7 @@ class display_controller : display_controller_api {
 
   void set_active_app(std::optional<size_t> app_index);
 
-  void gc_stdfn_timer(uint32_t stdfn_timer_id);
+  void on_heartbeat_timer();
 
   void send_msg(const uint32_t msg_type) const;
 

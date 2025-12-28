@@ -265,9 +265,10 @@ void display_controller::goto_main_menu() {
   set_active_app(0);
 }
 
-void display_controller::fatal_error(const char *message, bool unload_app) {
+void display_controller::fatal_error(const char *message, const bool unload_app) {
+  debugf("display_controller::fatal_error: message=\"%s\", unload_app=%d\n", message, unload_app);
   app_error_message = message;
-  auto prev_active_index = active_app_index;
+  const auto prev_active_index = active_app_index;
   goto_main_menu();
   if (unload_app && prev_active_index.has_value() && prev_active_index.value() != 0) {
     if (auto &[descriptor, userptr] = apps[prev_active_index.value()]; descriptor.on_teardown) {

@@ -40,12 +40,15 @@ void lcd_refresh_screen(const lcd_screen *screen) {
 int lcd_control_operate(const int mode) {
   switch (mode) {
   case LED_ON:
+  case LED_ON - 100:
     display->set_brightness(255);
     break;
   case LED_DIM:
+  case LED_DIM - 100:
     display->set_brightness(128);
     break;
   case LED_SLEEP:
+  case LED_SLEEP - 100:
     display->set_brightness(10);
     break;
   default:

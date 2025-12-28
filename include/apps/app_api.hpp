@@ -98,6 +98,20 @@ struct display_controller_api {
   }
 
   /**
+   * Report a fatal error to the controller.
+   *
+   * Renders an error message to the UI and exits the app, calling `on_leave`. If `unload_app` is true, the
+   * app will be unloaded after reporting the error, calling its `on_teardown` function, and removing it from the
+   * list of loaded apps.
+   *
+   * @param message The error message to display
+   * @param unload_app Whether to unload the app after reporting the error
+   */
+  void fatal_error(const std::string &message, const bool unload_app = false) {
+    app_api_fatal_error(this, message.c_str(), unload_app);
+  }
+
+  /**
    * Register an app loader for a specific file extension
    *
    * @param file_extension The file extension to register (including the dot, e.g. ".so")

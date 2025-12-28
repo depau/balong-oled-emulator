@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <deque>
 #include <functional>
 #include <optional>
 #include <span>
@@ -306,7 +307,7 @@ public:
 
 private:
   std::vector<app_descriptor> descriptors;
-  std::vector<std::string> app_names;
+  std::deque<std::string> app_names;
 
   static void adapter_teardown(void *userptr, const app_api_t controller_api) {
     if (userptr == nullptr)
@@ -333,6 +334,32 @@ public:
   explicit binding_app(app_api_t controller_api) {
     controller_api->register_app_loader(file_ext, &load_app_wrapper, this);
   }
+
+  binding_app &operator=(const binding_app &other) {
+    if (this == &other)
+      return *this;
+    this->descriptors = other.descriptors;
+    this->app_names = other.app_names;
+    for (size_t i = 0; i < this->app_names.size(); i++) {
+      this->descriptors[i].name = this->app_names[i].c_str();
+    }
+    return *this;
+  }
+
+  binding_app(const binding_app &other) { *this = other; }
+
+  binding_app &operator=(binding_app &&other) noexcept {
+    if (this == &other)
+      return *this;
+    this->descriptors = std::move(other.descriptors);
+    this->app_names = std::move(other.app_names);
+    for (size_t i = 0; i < this->app_names.size(); i++) {
+      this->descriptors[i].name = this->app_names[i].c_str();
+    }
+    return *this;
+  }
+
+  binding_app(binding_app &&other) noexcept { *this = std::move(other); }
 
 protected:
   /**

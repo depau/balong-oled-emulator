@@ -220,9 +220,23 @@ void display_controller::bump_wake_state() {
   manage_heartbeat_timer(true);
 }
 
+uint32_t (*timer_delete_ex_orig)(uint32_t) = nullptr;
+
+void display_controller::cancel_heartbeat_timer_callback(void *userptr) {
+  const uint32_t timer_id = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(userptr));
+  debugf("display_controller::cancel_heartbeat_timer_callback: cancelling heartbeat timer id=%u\n", timer_id);
+  if (timer_delete_ex_orig == nullptr) {
+    timer_delete_ex_orig = reinterpret_cast<uint32_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "osa_timer_delete_ex"));
+    assert(timer_delete_ex_orig != nullptr && "Failed to locate osa_timer_delete_ex");
+  }
+  timer_delete_ex_orig(timer_id);
+}
+
 void display_controller::manage_heartbeat_timer(const bool enable) {
   if (enable) {
+    debugf("display_controller::manage_heartbeat_timer: requested to enable heartbeat timer\n");
     if (!heartbeat_timer_helper.has_value()) {
+      debugf("display_controller::manage_heartbeat_timer: enabling heartbeat timer\n");
       std::scoped_lock lock(timer_mutex);
       heartbeat_timer_helper.emplace([this] { on_heartbeat_timer(); }, 0, true, 0);
 
@@ -233,9 +247,14 @@ void display_controller::manage_heartbeat_timer(const bool enable) {
       heartbeat_timer_helper->set_timer_id(heartbeat_timer_id);
     }
   } else {
+    debugf("display_controller::manage_heartbeat_timer: requested to disable heartbeat timer\n");
     if (heartbeat_timer_helper.has_value()) {
-      timer_delete_ex(heartbeat_timer_helper->get_timer_id());
-      heartbeat_timer_helper.reset();
+      debugf("display_controller::manage_heartbeat_timer: disabling heartbeat timer\n");
+      timer_create_ex(0,
+                      false,
+                      cancel_heartbeat_timer_callback,
+                      reinterpret_cast<void *>(static_cast<uintptr_t>(heartbeat_timer_helper->get_timer_id())));
+      heartbeat_timer_helper = std::nullopt;
     }
   }
 }
@@ -322,6 +341,7 @@ void display_controller::fatal_error(const char *message, const bool unload_app)
 
 void display_controller::on_heartbeat_timer() {
   std::scoped_lock lock(timer_mutex);
+  timer_debugf("display_controller::on_heartbeat_timer\n");
   const auto now = std::chrono::steady_clock::now();
 
   for (auto it = active_timers.begin(); it != active_timers.end();) {
@@ -377,13 +397,11 @@ void display_controller::on_heartbeat_timer() {
       if (old_wake_state != current_wake_state) {
         if (current_wake_state == WAKE_STATE_SLEEP) {
           lcd_control_operate(LED_SLEEP);
+          manage_heartbeat_timer(false);
         } else if (current_wake_state == WAKE_STATE_DIM) {
           lcd_control_operate(LED_DIM);
         }
       }
-    }
-    if (current_wake_state == WAKE_STATE_SLEEP) {
-      manage_heartbeat_timer(false);
     }
   }
 }

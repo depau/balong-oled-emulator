@@ -92,6 +92,8 @@ class display_controller : display_controller_api {
 
   void bump_wake_state();
 
+  static void cancel_heartbeat_timer_callback(void *userptr);
+
   void manage_heartbeat_timer(bool enable);
 
 public:

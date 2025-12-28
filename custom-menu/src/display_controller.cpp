@@ -4,6 +4,7 @@
 #include <mutex>
 
 #include "display_controller.hpp"
+#include "hooked_functions.h"
 #include "main_menu.hpp"
 #include "so_app_loader.hpp"
 
@@ -212,30 +213,45 @@ void display_controller::send_msg(const uint32_t msg_type) const {
   msgQex_send(msg_queue, msg, 2 * sizeof(uint32_t), 0);
 }
 
+void display_controller::bump_wake_state() {
+  current_wake_state = WAKE_STATE_FULL;
+  next_wake_state_due = std::chrono::steady_clock::now() + WAKE_STATE_TIMEOUTS[WAKE_STATE_FULL];
+  lcd_control_operate(LED_ON);
+  manage_heartbeat_timer(true);
+}
+
+void display_controller::manage_heartbeat_timer(const bool enable) {
+  if (enable) {
+    if (!heartbeat_timer_helper.has_value()) {
+      std::scoped_lock lock(timer_mutex);
+      heartbeat_timer_helper.emplace([this] { on_heartbeat_timer(); }, 0, true, 0);
+
+      const uint32_t heartbeat_timer_id = timer_create_ex(FRAME_INTERVAL_MS,
+                                                          true,
+                                                          timer_helper::get_trampoline(),
+                                                          heartbeat_timer_helper->get_userptr());
+      heartbeat_timer_helper->set_timer_id(heartbeat_timer_id);
+    }
+  } else {
+    if (heartbeat_timer_helper.has_value()) {
+      timer_delete_ex(heartbeat_timer_helper->get_timer_id());
+      heartbeat_timer_helper.reset();
+    }
+  }
+}
+
 void display_controller::set_active(const bool active) {
   if (active == is_active)
     return;
 
   if (!active) {
     set_active_app(std::nullopt);
-
-    if (heartbeat_timer_helper.has_value()) {
-      timer_delete_ex(heartbeat_timer_helper->get_timer_id());
-      heartbeat_timer_helper.reset();
-      std::scoped_lock lock(timer_mutex);
-      active_timers.clear();
-    }
+    manage_heartbeat_timer(false);
   } else {
     set_active_app(0);
 
-    std::scoped_lock lock(timer_mutex);
-    heartbeat_timer_helper.emplace([this] { on_heartbeat_timer(); }, 0, true, 0);
-
-    const uint32_t heartbeat_timer_id = timer_create_ex(FRAME_INTERVAL_MS,
-                                                        true,
-                                                        timer_helper::get_trampoline(),
-                                                        heartbeat_timer_helper->get_userptr());
-    heartbeat_timer_helper->set_timer_id(heartbeat_timer_id);
+    bump_wake_state();
+    manage_heartbeat_timer(true);
   }
   is_active = active;
 
@@ -269,6 +285,7 @@ void display_controller::switch_to_small_screen_mode() {
 }
 
 void display_controller::on_keypress(const int button) {
+  bump_wake_state();
   if (active_app_index.has_value()) {
     if (auto &[descriptor, userptr] = apps[active_app_index.value()]; descriptor.on_keypress) {
       descriptor.on_keypress(userptr, this, button);
@@ -325,6 +342,39 @@ void display_controller::on_heartbeat_timer() {
       }
     } else {
       ++it;
+    }
+  }
+
+  // Handle wake state timeout
+  if (now >= next_wake_state_due) {
+    if (current_wake_state > WAKE_STATE_SLEEP) {
+      const wake_state_t old_wake_state = current_wake_state;
+      current_wake_state = static_cast<wake_state_t>(static_cast<int>(current_wake_state) - 1);
+
+      wake_state_t min_wake_state = WAKE_STATE_SLEEP;
+      if (active_app_index.has_value()) {
+        auto &[descriptor, userptr] = apps[active_app_index.value()];
+        if (descriptor.get_minimum_wake_state) {
+          const wake_state_t app_min_wake_state = descriptor.get_minimum_wake_state(userptr, this);
+          if (app_min_wake_state < min_wake_state) {
+            min_wake_state = app_min_wake_state;
+          }
+        }
+      }
+      if (current_wake_state < min_wake_state)
+        current_wake_state = min_wake_state;
+
+      next_wake_state_due = now + WAKE_STATE_TIMEOUTS[current_wake_state];
+      if (old_wake_state != current_wake_state) {
+        if (current_wake_state == WAKE_STATE_SLEEP) {
+          lcd_control_operate(LED_SLEEP);
+        } else if (current_wake_state == WAKE_STATE_DIM) {
+          lcd_control_operate(LED_DIM);
+        }
+      }
+    }
+    if (current_wake_state == WAKE_STATE_SLEEP) {
+      manage_heartbeat_timer(false);
     }
   }
 }

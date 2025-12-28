@@ -26,6 +26,12 @@ class display_controller : display_controller_api {
 
   using app_loader_desc_t = std::pair<app_loader_callback_fn_t, void *>;
 
+  static constexpr std::chrono::milliseconds WAKE_STATE_TIMEOUTS[] = {
+    std::chrono::milliseconds(0'000), // WAKE_STATE_SLEEP
+    std::chrono::milliseconds(6'000), // WAKE_STATE_DIMMED
+    std::chrono::milliseconds(12'000) // WAKE_STATE_FULL
+  };
+
   uint32_t (*timer_create_ex)(uint32_t, uint32_t, void (*)(void *), void *);
   uint32_t (*timer_delete_ex)(uint32_t);
   uint32_t (*get_msgQ_id)(uint32_t);
@@ -70,6 +76,9 @@ class display_controller : display_controller_api {
   bool is_small_screen_mode = false;
   bool is_active = false;
 
+  wake_state_t current_wake_state = WAKE_STATE_FULL;
+  std::chrono::steady_clock::time_point next_wake_state_due{};
+
   // Private methods
   static std::vector<std::string> get_app_lookup_paths();
 
@@ -80,6 +89,10 @@ class display_controller : display_controller_api {
   void on_heartbeat_timer();
 
   void send_msg(const uint32_t msg_type) const;
+
+  void bump_wake_state();
+
+  void manage_heartbeat_timer(bool enable);
 
 public:
   display_controller();

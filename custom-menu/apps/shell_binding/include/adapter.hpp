@@ -8,6 +8,7 @@
 
 #include "apps/app_api.h"
 #include "apps/app_api.hpp"
+#include "debug.h"
 #include "subprocess.hpp"
 #include "ui/screens/loading_screen.hpp"
 #include "ui/ui_session_app.hpp"
@@ -58,6 +59,7 @@ public:
   void setup(const app_api_t) { show_loading_screen(); }
 
   void on_enter(const app_api_t) {
+    debugf("shell_script_binding: entering %s app\n", shell_path.c_str());
     ui_session_app::on_enter(controller_api);
     if (!entered && !process.is_alive()) {
       run_process();
@@ -67,6 +69,7 @@ public:
   }
 
   void on_leave(const app_api_t) {
+    debugf("shell_script_binding: leaving %s app\n", shell_path.c_str());
     ui_session_app::on_leave(controller_api);
     shutdown_process();
     entered = false;

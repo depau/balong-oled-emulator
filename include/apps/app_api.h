@@ -42,6 +42,12 @@ typedef enum display_mode {
   DISPLAY_MODE_BW1
 } display_mode_t;
 
+typedef enum wake_state {
+  WAKE_STATE_SLEEP = 0,
+  WAKE_STATE_DIM,
+  WAKE_STATE_FULL
+} wake_state_t;
+
 typedef struct app_menu_entry {
   uintptr_t id;
   const char *name;
@@ -101,12 +107,24 @@ DECLARE_FN_TYPE(app_on_enter_fn_t, void, void *userptr, app_api_t controller_api
  */
 DECLARE_FN_TYPE(app_on_leave_fn_t, void, void *userptr, app_api_t controller_api);
 
+/**
+ * Return the minimum wake state required by the app
+ *
+ * Called by the display controller to determine the minimum wake state required by the app.
+ *
+ * @param controller_api The controller API object
+ * @param userptr The user pointer returned by the setup function
+ * @return The minimum wake state required by the app
+ */
+DECLARE_FN_TYPE(app_get_minimum_wake_state_fn_t, wake_state_t, void *userptr, app_api_t controller_api);
+
 typedef struct app_descriptor {
   const char *name;
   app_teardown_fn_t on_teardown;
   app_on_enter_fn_t on_enter;
   app_on_leave_fn_t on_leave;
   app_on_keypress_fn_t on_keypress;
+  app_get_minimum_wake_state_fn_t get_minimum_wake_state;
 } app_descriptor_t;
 
 /**

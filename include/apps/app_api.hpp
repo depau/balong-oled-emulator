@@ -213,6 +213,11 @@ concept HasOnTeardown = requires(T &t, app_api_t controller_api) {
 };
 
 template<typename T>
+concept HasGetMinimumWakeState = requires(T &t, app_api_t controller_api) {
+  { t.get_minimum_wake_state(controller_api) } -> sdk19compat::same_as<wake_state_t>;
+};
+
+template<typename T>
 void on_enter_trampoline(void *userptr, app_api_t controller_api) {
   if constexpr (HasOnEnter<T>) {
     static_cast<T *>(userptr)->on_enter(controller_api);
@@ -241,6 +246,14 @@ void on_teardown_trampoline(void *userptr, app_api_t controller_api) {
 }
 
 template<typename T>
+wake_state_t get_minimum_wake_state_trampoline(void *userptr, app_api_t controller_api) {
+  if constexpr (HasGetMinimumWakeState<T>) {
+    return static_cast<T *>(userptr)->get_minimum_wake_state(controller_api);
+  }
+  return WAKE_STATE_SLEEP;
+}
+
+template<typename T>
 consteval app_on_enter_fn_t get_on_enter_ptr() {
   if constexpr (HasOnEnter<T>) {
     return &on_enter_trampoline<T>;
@@ -264,6 +277,14 @@ consteval app_on_keypress_fn_t get_on_keypress_ptr() {
   return nullptr;
 }
 
+template<typename T>
+consteval app_get_minimum_wake_state_fn_t get_get_minimum_wake_state_ptr() {
+  if constexpr (HasGetMinimumWakeState<T>) {
+    return &get_minimum_wake_state_trampoline<T>;
+  }
+  return nullptr;
+}
+
 // NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define _DECLARE_CPP_APP_INTERNAL(_register_app_fn_name, _descriptor_name, _name, _class) \
   void *_##_class##__setup(app_api_t controller_api) {                                    \
@@ -280,7 +301,8 @@ consteval app_on_keypress_fn_t get_on_keypress_ptr() {
                         _##_class##__teardown,                                            \
                         get_on_enter_ptr<_class>(),                                       \
                         get_on_leave_ptr<_class>(),                                       \
-                        get_on_keypress_ptr<_class>())
+                        get_on_keypress_ptr<_class>(),                                    \
+                        get_get_minimum_wake_state_ptr<_class>())
 
 /**
  * Declare a C++ app.
@@ -370,12 +392,14 @@ protected:
    * @param on_enter The on_enter callback
    * @param on_leave The on_leave callback
    * @param on_keypress The on_keypress callback
+   * @param get_minimum_wake_state The get_minimum_wake_state callback
    * @return A pointer to the built app descriptor
    */
   app_descriptor *build_descriptor(const std::string &app_name,
                                    const app_on_enter_fn_t on_enter,
                                    const app_on_leave_fn_t on_leave,
-                                   const app_on_keypress_fn_t on_keypress) {
+                                   const app_on_keypress_fn_t on_keypress,
+                                   const app_get_minimum_wake_state_fn_t get_minimum_wake_state = nullptr) {
     app_names.push_back(app_name);
     descriptors.push_back({
       .name = app_names.back().c_str(),
@@ -383,6 +407,7 @@ protected:
       .on_enter = on_enter,
       .on_leave = on_leave,
       .on_keypress = on_keypress,
+      .get_minimum_wake_state = get_minimum_wake_state,
     });
     return &descriptors.back();
   }
@@ -397,6 +422,7 @@ protected:
     return build_descriptor(app_name,
                             get_on_enter_ptr<Adapter>(),
                             get_on_leave_ptr<Adapter>(),
-                            get_on_keypress_ptr<Adapter>());
+                            get_on_keypress_ptr<Adapter>(),
+                            get_get_minimum_wake_state_ptr<Adapter>());
   }
 };

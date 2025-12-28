@@ -104,7 +104,7 @@ public:
   /**
    * Push a new screen onto the stack
    *
-   * @param screen The screen to push
+   * @param screen The pushed screen
    */
   template<typename T>
   T &push_screen_norender(std::unique_ptr<T> screen) {
@@ -116,7 +116,7 @@ public:
   /**
    * Push a new screen onto the stack and render it.
    *
-   * @param screen The screen to push
+   * @param screen The pushed screen
    */
   template<typename T>
   T &push_screen(std::unique_ptr<T> screen) {
@@ -128,7 +128,7 @@ public:
   /**
    * Replace the top screen in the stack with a new screen
    *
-   * @param screen The screen to replace with
+   * @param screen The replaced screen
    */
   template<typename T>
   T &replace_screen_norender(std::unique_ptr<T> screen) {
@@ -142,7 +142,7 @@ public:
   /**
    * Replace the top screen in the stack with a new screen and render it.
    *
-   * @param screen The screen to replace with
+   * @param screen The replaced screen
    */
   template<typename T>
   T &replace_screen(std::unique_ptr<T> screen) {
@@ -168,6 +168,18 @@ public:
   void pop_screen() {
     pop_screen_norender();
     render();
+  }
+
+  /**
+   * Get a reference to the top screen in the stack.
+   *
+   * @return An optional reference to the top screen. Returns std::nullopt if the stack is empty.
+   */
+  std::optional<std::reference_wrapper<screens::iscreen>> get_top_screen() const {
+    if (!screen_stack.empty()) {
+      return *screen_stack.back();
+    }
+    return std::nullopt;
   }
 
   /**

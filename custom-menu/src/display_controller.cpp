@@ -285,6 +285,15 @@ void display_controller::switch_to_small_screen_mode() {
 }
 
 void display_controller::on_keypress(const int button) {
+  if (current_wake_state == WAKE_STATE_SLEEP) {
+    bump_wake_state();
+    if (active_app_index.has_value()) {
+      if (auto &[descriptor, userptr] = apps[active_app_index.value()]; descriptor.on_enter) {
+        descriptor.on_enter(userptr, this);
+      }
+    }
+    return;
+  }
   bump_wake_state();
   if (active_app_index.has_value()) {
     if (auto &[descriptor, userptr] = apps[active_app_index.value()]; descriptor.on_keypress) {

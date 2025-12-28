@@ -148,7 +148,8 @@ struct display_controller_api {
   }
 
   /**
-   * Cancel a previously registered timer
+   * Cancel a previously registered timer.
+   * Note: it doesn't appear to be possible to cancel a timer from within its own callback.
    *
    * @param timer_id The ID of the timer to cancel
    * @return 0 on success, non-zero on failure

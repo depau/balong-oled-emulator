@@ -266,6 +266,7 @@ EXPORT uint32_t app_api_schedule_timer(app_api_t controller_api,
 
 /**
  * Cancel a previously registered timer
+ * Note: it doesn't appear to be possible to cancel a timer from within its own callback.
  *
  * @param controller_api The controller API object
  * @param timer_id The ID of the timer to cancel

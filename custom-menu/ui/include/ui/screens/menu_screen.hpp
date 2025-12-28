@@ -227,7 +227,7 @@ public:
         scroll_info.scrollContainerDimensions.height) {
       scroll_info.scrollPosition->y = -static_cast<int>(active_entry_y_offset_from_page_break +
                                                         last_page_break_y_offset + active_entry.boundingBox.height -
-                                                        scroll_info.scrollContainerDimensions.height);
+                                                        scroll_info.scrollContainerDimensions.height + 1);
       can_scroll_up = true;
     } else {
       scroll_info.scrollPosition->y = -static_cast<int>(last_page_break_y_offset);

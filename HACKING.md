@@ -46,7 +46,7 @@ ln -s $WD/custom-menu/ui/libui.so libui.so
 popd
 
 # CLion's multiarch GDB is quite convenient for this
-~/JetBrains/clion/bin/gdb/linux/x64/bin/gdb \
+~/.local/share/JetBrains/Toolbox/apps/clion/bin/gdb/linux/x64/bin/gdb \
   -ex 'set sysroot ~/router/rootfs' \
   -ex 'target extended-remote tcp:192.168.8.1:1234' \
   -ex 'set remote exec-file /app/bin/oled.orig' \

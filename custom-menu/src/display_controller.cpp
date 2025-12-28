@@ -279,7 +279,6 @@ void display_controller::fatal_error(const char *message, const bool unload_app)
 }
 
 void display_controller::gc_stdfn_timer(const uint32_t stdfn_timer_id) {
-  std::scoped_lock lock(stdfn_timer_mutex);
   if (const auto it = scheduled_stdfn_timers.find(stdfn_timer_id); it != scheduled_stdfn_timers.end()) {
     const auto &helper = it->second;
     const uint32_t timer_id = helper.get_timer_id();
@@ -304,8 +303,6 @@ void display_controller::gc_stdfn_timer(const uint32_t stdfn_timer_id) {
 }
 
 uint32_t display_controller::schedule_timer(std::function<void()> &&callback, uint32_t interval_ms, bool repeat) {
-  std::scoped_lock lock(stdfn_timer_mutex);
-
   uint32_t stdfn_timer_id = next_stdfn_timer_id++;
 
   assert(!scheduled_stdfn_timers.contains(stdfn_timer_id) && "stdfn_timer_id collision detected");
@@ -340,7 +337,6 @@ uint32_t display_controller::schedule_timer(void (*callback)(void *userptr),
 uint32_t display_controller::cancel_timer(const uint32_t timer_id) {
   const uint32_t res = timer_delete_ex(timer_id);
 
-  std::scoped_lock lock(stdfn_timer_mutex);
   if (const auto it = scheduled_stdfn_timer_ids.find(timer_id); it != scheduled_stdfn_timer_ids.end()) {
     const uint32_t stdfn_timer_id = it->second;
     scheduled_stdfn_timers.erase(stdfn_timer_id);

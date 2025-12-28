@@ -3,6 +3,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <span>
 #include <string>
@@ -56,6 +57,7 @@ class display_controller : display_controller_api {
 
   std::optional<std::string> app_error_message = std::nullopt;
 
+  std::recursive_mutex stdfn_timer_mutex;
   std::map<uint32_t, stdfn_timer_helper<display_controller>> scheduled_stdfn_timers{};
   std::map<uint32_t, uint32_t> scheduled_stdfn_timer_ids{};
   uint32_t next_stdfn_timer_id = 1;

@@ -305,6 +305,7 @@ public:
 
 private:
   std::vector<app_descriptor> descriptors;
+  std::vector<std::string> app_names;
 
   static void adapter_teardown(void *userptr, const app_api_t controller_api) {
     if (userptr == nullptr)
@@ -343,12 +344,13 @@ protected:
    * @param on_keypress The on_keypress callback
    * @return A pointer to the built app descriptor
    */
-  app_descriptor *build_descriptor(const char *app_name,
+  app_descriptor *build_descriptor(const std::string &app_name,
                                    const app_on_enter_fn_t on_enter,
                                    const app_on_leave_fn_t on_leave,
                                    const app_on_keypress_fn_t on_keypress) {
+    app_names.push_back(app_name);
     descriptors.push_back({
-      .name = app_name,
+      .name = app_names.back().c_str(),
       .on_teardown = &adapter_teardown,
       .on_enter = on_enter,
       .on_leave = on_leave,
@@ -363,7 +365,7 @@ protected:
    * @param app_name The name of the app
    * @return A pointer to the built app descriptor
    */
-  app_descriptor *build_descriptor(const char *app_name) {
+  app_descriptor *build_descriptor(const std::string &app_name) {
     return build_descriptor(app_name,
                             get_on_enter_ptr<Adapter>(),
                             get_on_leave_ptr<Adapter>(),

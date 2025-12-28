@@ -273,6 +273,8 @@ public:
     }
   }
 
+  size_t get_active_entry() const { return active_entry; }
+
   void set_active_entry(const size_t entry_index) {
     assert(entry_index < actions->size());
     active_entry = entry_index;

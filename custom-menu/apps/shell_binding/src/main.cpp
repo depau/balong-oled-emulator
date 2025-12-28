@@ -5,6 +5,7 @@
 #include "adapter.hpp"
 #include "apps/app_api.h"
 #include "apps/app_api.hpp"
+#include "debug.h"
 
 class shell_script_binding_app : public binding_app<shell_script_binding_app, shell_script_adapter, ".sh"> {
 public:
@@ -19,7 +20,7 @@ public:
     }
 
     std::string script_name(app_path);
-    size_t last_slash = script_name.find_last_of('/');
+    const size_t last_slash = script_name.find_last_of('/');
     if (last_slash != std::string::npos) {
       script_name = script_name.substr(last_slash + 1);
     }
@@ -27,7 +28,6 @@ public:
     const size_t dot_sh = script_name.rfind(".sh");
     if (dot_sh != std::string::npos)
       script_name = script_name.substr(0, dot_sh);
-
 
     // Trim [0-9]*- prefix
     size_t prefix_end = 0;
@@ -52,6 +52,8 @@ public:
 
     auto *adapter = new adapter_t(controller_api, script_name, app_path);
     *app_userptr = static_cast<void *>(adapter);
+
+    debugf("shell_script_binding: loaded script app: %s (%s)\n", script_name.c_str(), app_path);
 
     return build_descriptor(script_name);
   }

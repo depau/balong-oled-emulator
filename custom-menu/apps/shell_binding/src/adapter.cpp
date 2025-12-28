@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "adapter.hpp"
+#include "debug.h"
 #include "ui/actions/label.hpp"
 
 void shell_script_adapter::run_process(const std::optional<std::string> &arg) {
@@ -18,6 +19,12 @@ void shell_script_adapter::run_process(const std::optional<std::string> &arg) {
   argv.push_back(shell_path);
   if (arg.has_value())
     argv.push_back(*arg);
+
+  debugf("shell_script_binding: running");
+  for (const std::string &arg : argv) {
+    debugf(" '%s'", arg.c_str());
+  }
+  debugf("\n");
 
   const std::optional<int> res = process.run(argv, true);
   if (res.has_value()) {
@@ -105,6 +112,7 @@ void shell_script_adapter::poll_process() {
   if (process.is_alive()) {
     show_loading_screen();
     if (std::chrono::steady_clock::now() - process_start_time > TIMEOUT) {
+      debugf("shell_script_binding: script timed out\n");
       shutdown_process();
       controller_api->fatal_error("Script timed out");
     }
@@ -112,6 +120,7 @@ void shell_script_adapter::poll_process() {
     const std::optional<int> maybe_exit_code = process.get_exit_code();
     assert(maybe_exit_code.has_value());
     const int exit_code = *maybe_exit_code;
+    debugf("shell_script_binding: script exited with code %d\n", exit_code);
 
     if (exit_code != 0)
       return controller_api->fatal_error(std::string("Script failed with code ") + std::to_string(exit_code));
@@ -142,20 +151,24 @@ void shell_script_adapter::poll_process() {
 }
 
 void shell_script_adapter::shutdown_process() {
+  debugf("shell_script_binding: shutting down process\n");
   if (poll_timer_id != 0) {
     controller_api->cancel_timer(poll_timer_id);
     poll_timer_id = 0;
   }
 
   if (process.is_alive()) {
+    debugf("shell_script_binding: sending SIGTERM to process\n");
     const auto res = process.terminate();
     if (res.has_value() && *res != 0)
       return controller_api->fatal_error(std::string("Failed to stop script: ") + strerror(*res));
 
     // Make sure it's dead
     auto lambda = [old_process = std::make_shared<subprocess::process>(std::move(process))] {
-      if (old_process->is_alive())
+      if (old_process->is_alive()) {
+        debugf("shell_script_binding: process did not exit after SIGTERM, sending SIGKILL\n");
         (void) old_process->kill();
+      }
     };
     controller_api->schedule_timer(1000, false, std::move(lambda));
   }

@@ -14,6 +14,7 @@ add_library(balong_custom_menu SHARED
         src/app_api.cpp
         src/main_menu.cpp
         src/so_app_loader.cpp
+        src/stdfn_timer_helper.cpp
 )
 target_include_directories(balong_custom_menu PRIVATE
         "${COMMON_INCLUDE_DIR}"

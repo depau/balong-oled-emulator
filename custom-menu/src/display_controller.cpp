@@ -301,6 +301,15 @@ void display_controller::gc_stdfn_timer(const uint32_t stdfn_timer_id) {
       std::cerr << "stdfn_timer_callback: Unknown stdfn_timer_id=" << stdfn_timer_id << "\n";
     }
   }
+
+  if (!deferred_timer_cancellations.empty()) {
+    while (!deferred_timer_cancellations.empty()) {
+      const uint32_t timer_id = deferred_timer_cancellations.front();
+      deferred_timer_cancellations.pop();
+      timer_debugf("processing deferred timer cancellation: timer_id=%u\n", timer_id);
+      cancel_timer(timer_id);
+    }
+  }
 }
 
 uint32_t display_controller::schedule_timer(std::function<void()> &&callback, uint32_t interval_ms, bool repeat) {
@@ -332,12 +341,18 @@ uint32_t display_controller::schedule_timer(void (*callback)(void *userptr),
                                             const uint32_t interval_ms,
                                             const bool repeat,
                                             void *userptr) {
-  const uint32_t res = timer_create_ex(interval_ms, repeat, callback, userptr);
-  debugf("scheduled C function timer: timer_id=%u, interval_ms=%u, repeat=%d\n", res, interval_ms, repeat);
-  return res;
+  // Always use std::function timers so we can handle nested timer cancellations
+  return schedule_timer([userptr, callback] { callback(userptr); }, interval_ms, repeat);
 }
 
 uint32_t display_controller::cancel_timer(const uint32_t timer_id) {
+  const std::optional<uint32_t> running_timer_id = get_running_timer_id();
+  if (running_timer_id.has_value() && *running_timer_id == timer_id) {
+    std::cerr << "Warning: Attempted to cancel currently running timer_id=" << timer_id << ", deferring\n";
+    deferred_timer_cancellations.push(timer_id);
+    return 0;
+  }
+
   const uint32_t res = timer_delete_ex(timer_id);
 
   std::scoped_lock lock(stdfn_timer_mutex);

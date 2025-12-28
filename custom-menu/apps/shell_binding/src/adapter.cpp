@@ -127,12 +127,10 @@ void shell_script_adapter::poll_process() {
     if (exit_code != 0)
       return controller_api->fatal_error(std::string("Script failed with code ") + std::to_string(exit_code));
 
-    controller_api->schedule_timer(1, false, [this] {
       debugf("shell_script_binding: cancelling poll timer %u\n", poll_timer_id);
       controller_api->cancel_timer(poll_timer_id);
       poll_timer_id = 0;
       debugf("shell_script_binding: timer cancelled\n");
-    });
 
     debugf("shell_script_binding: parsing actions from stdout\n");
     const size_t prev_action_count = actions.size();

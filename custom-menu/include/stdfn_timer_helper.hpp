@@ -1,6 +1,14 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
+#include <optional>
+
+namespace timers_priv {
+extern thread_local std::optional<uint32_t> current_timer_id;
+}
+
+std::optional<uint32_t> get_running_timer_id();
 
 template<typename T>
 class stdfn_timer_helper {
@@ -39,7 +47,9 @@ public:
   stdfn_timer_helper(stdfn_timer_helper &&other) noexcept { *this = std::move(other); }
 
   void operator()() const {
+    timers_priv::current_timer_id = timer_id;
     callback();
+    timers_priv::current_timer_id = std::nullopt;
     timer_host->gc_stdfn_timer(stdfn_timer_id);
   }
 

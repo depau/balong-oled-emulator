@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <span>
 #include <string>
 #include <vector>
@@ -61,6 +62,7 @@ class display_controller : display_controller_api {
   std::map<uint32_t, stdfn_timer_helper<display_controller>> scheduled_stdfn_timers{};
   std::map<uint32_t, uint32_t> scheduled_stdfn_timer_ids{};
   uint32_t next_stdfn_timer_id = 1;
+  std::queue<uint32_t> deferred_timer_cancellations{};
 
   bool is_small_screen_mode = false;
   bool is_active = false;
